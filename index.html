@@ -1,0 +1,2612 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Kalecik.json editor</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#4a89c8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Kalecik">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<link rel="apple-touch-icon" href="icons/180.png">
+<link rel="icon" type="image/png" href="icons/192.png">
+
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600&family=Noto+Serif:wght@700;800&display=swap">
+<style>
+/* Thème clair unique, voulu : cartes blanc crème et texte foncé quel que soit le réglage du téléphone. Reproduit le menu Réglages de Kalecik : fond ciel, carte blanc crème très arrondie, onglets (actif en terracotta), curseurs à piste terracotta et pouce blanc, pilules grises. */
+:root {
+  --bg: #4a89c8;
+  --grass: #b4dba3;
+  --card: #fcf8f2;
+  --pill: #ece8e1;
+  --ink: #403d39;
+  --muted: #7a756c;
+  --line: #e4dfd5;
+  --track: #ddd8ce;
+  --thumb-edge: #c9c3b8;
+  --accent: #b8553d;
+  --accent-ink: #ffffff;
+  --sea: #1d5a73;
+  --title: #f9f0e0;
+  --title-edge: #5a402c;
+  --shadow: 0 6px 22px rgba(40, 50, 60, .25);
+  color-scheme: light;
+  --f-display: "Noto Serif", Georgia, serif;
+  --f-body: "Noto Sans", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.45; }
+body::after { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: linear-gradient(to bottom, var(--bg) 0, var(--bg) 48%, var(--grass) 100%); }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 10; background: var(--bg); }
+.wrap {
+  max-width: 640px; margin: 0 auto;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 18px 120px;
+  display: flex; flex-direction: column; gap: 16px;
+}
+.wrap, .dock-in, .toast { zoom: .92; }
+header { padding: 4px 60px 2px 4px; position: relative; }
+.lang { position: absolute; top: -8px; right: -10px; z-index: 50; transform: scale(.88); transform-origin: top right; }
+.lang .pill { min-height: 40px; min-width: 48px; padding: 0 12px; display: flex; align-items: center; justify-content: center; gap: 6px; line-height: 0; background: transparent; box-shadow: none; color: #fff; filter: drop-shadow(0 1px 3px rgba(0, 0, 0, .55)); font-weight: 600; font-size: 13px; }
+.lang .pill:active { background: transparent; opacity: .7; }
+body.is-full .lang { z-index: 0; visibility: hidden; }
+.lang svg { width: 20px; height: 20px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.langmenu { position: absolute; right: 0; top: 46px; min-width: 210px; background: var(--card); border-radius: 18px; box-shadow: var(--shadow); padding: 6px; display: grid; }
+.langmenu[hidden] { display: none; }
+.flag { display: block; flex: none; width: 24px; height: 16px; border-radius: 3px; overflow: hidden; box-shadow: 0 0 0 1px rgba(0, 0, 0, .18); }
+.lang .flag svg, .flag svg { display: block; width: 100%; height: 100%; fill: initial; stroke: none; }
+.langopt { min-height: 42px; display: flex; align-items: center; gap: 10px; border: 0; background: transparent; text-align: left; padding: 0 14px; border-radius: 12px; font-weight: 500; cursor: pointer; }
+.setting-h { padding: 8px 14px 2px; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: .03em; }
+.langmenu hr { margin: 6px 8px; }
+.langopt[aria-current="true"] { background: var(--pill); font-weight: 600; }
+header h1 { font-family: var(--f-display); font-weight: 800; font-size: clamp(22px, 7.6vw, 38px); line-height: 1.05; letter-spacing: .01em; margin: 0; color: var(--title); white-space: nowrap;
+  text-rendering: optimizeLegibility; -webkit-font-smoothing: antialiased;
+  /* contour brun arrondi (anneau d'ombres sans angles vifs) puis ombre douce portée, comme le titre du jeu */
+  text-shadow: 0.055em 0.000em 0 var(--title-edge), 0.052em 0.019em 0 var(--title-edge), 0.042em 0.035em 0 var(--title-edge), 0.028em 0.048em 0 var(--title-edge), 0.010em 0.054em 0 var(--title-edge), -0.010em 0.054em 0 var(--title-edge), -0.027em 0.048em 0 var(--title-edge), -0.042em 0.035em 0 var(--title-edge), -0.052em 0.019em 0 var(--title-edge), -0.055em 0.000em 0 var(--title-edge), -0.052em -0.019em 0 var(--title-edge), -0.042em -0.035em 0 var(--title-edge), -0.028em -0.048em 0 var(--title-edge), -0.010em -0.054em 0 var(--title-edge), 0.010em -0.054em 0 var(--title-edge), 0.027em -0.048em 0 var(--title-edge), 0.042em -0.035em 0 var(--title-edge), 0.052em -0.019em 0 var(--title-edge), 0.034em 0.006em 0 var(--title-edge), 0.030em 0.017em 0 var(--title-edge), 0.022em 0.027em 0 var(--title-edge), 0.012em 0.033em 0 var(--title-edge), 0.000em 0.035em 0 var(--title-edge), -0.012em 0.033em 0 var(--title-edge), -0.022em 0.027em 0 var(--title-edge), -0.030em 0.018em 0 var(--title-edge), -0.034em 0.006em 0 var(--title-edge), -0.034em -0.006em 0 var(--title-edge), -0.030em -0.017em 0 var(--title-edge), -0.022em -0.027em 0 var(--title-edge), -0.012em -0.033em 0 var(--title-edge), 0.012em -0.033em 0 var(--title-edge), 0.022em -0.027em 0 var(--title-edge), 0.030em -0.018em 0 var(--title-edge), 0.034em -0.006em 0 var(--title-edge),
+    .02em .075em .07em rgba(45, 28, 12, .45), 0 .1em .2em rgba(0, 0, 0, .25); }
+header h1 { position: relative; z-index: 1; }
+.clouds { position: absolute; z-index: 0; top: -18px; left: calc(50% - 50vw / .92); width: calc(100vw / .92); height: 96px; overflow: hidden; pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 30%, rgba(0, 0, 0, .55) 52%, transparent 74%); mask-image: linear-gradient(to bottom, #000 0%, #000 30%, rgba(0, 0, 0, .55) 52%, transparent 74%); }
+.clouds canvas { display: block; width: 100%; height: 100%; }
+header p { margin: 8px 0 0; color: #fff; font-weight: 500; text-shadow: 0 1px 4px rgba(0, 0, 0, .5); }
+
+html, body { overflow-x: clip; max-width: 100%; }
+.stick { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 15; padding-block: 8px 12px; }
+/* bandeau flouté pleine largeur : le menu défile derrière, mais ce bandeau capte les touches (rien n'est cliquable derrière) */
+.stick::before { content: ""; position: absolute; z-index: -1; top: 0; bottom: 0; left: 50%; width: calc(100vw / .92); transform: translateX(-50%);
+  background: color-mix(in srgb, var(--bg) 45%, transparent); -webkit-backdrop-filter: blur(16px) saturate(1.15); backdrop-filter: blur(16px) saturate(1.15);
+  border-bottom: 1px solid rgba(255, 255, 255, .28); box-shadow: 0 8px 18px -10px rgba(20, 30, 40, .45); }
+.stick.is-full { position: static; z-index: 40; padding: 0; }
+.stick.is-full::before { display: none; }
+.stage { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; margin-inline: calc((100% - 100vw / .92) / 2); padding-inline: max(4px, env(safe-area-inset-left, 0px)) max(4px, env(safe-area-inset-right, 0px)); }
+.stick.is-full .stage { margin-inline: 0; padding-inline: 0; }
+.side { display: flex; flex-direction: column; gap: 8px; flex: none; }
+.stick.is-full .side { position: fixed; top: calc(8px + env(safe-area-inset-top, 0px)); z-index: 35; }
+.stick.is-full .side.l { left: max(4px, env(safe-area-inset-left, 0px)); }
+.stick.is-full .side.r { right: max(4px, env(safe-area-inset-right, 0px)); bottom: calc(8px + env(safe-area-inset-bottom, 0px)); pointer-events: none; }   /* plein écran : colonne de droite sur toute la hauteur, zoom en bas à droite */
+.stick.is-full .side.r > * { pointer-events: auto; }
+.side.r { align-self: stretch; }
+.side.r .zoompill { margin-top: auto; }   /* zoom en bas à droite de la carte */
+.canvas-box { min-width: 0; width: min(100%, 46vh); margin: 0 auto; position: relative; background: var(--sea); border: 0; border-radius: 26px; box-shadow: var(--shadow); overflow: hidden; aspect-ratio: 1; max-width: 100%; }
+.canvas-box canvas { display: block; width: 100%; height: 100%; touch-action: none; cursor: zoom-in; transform-origin: 0 0; will-change: transform; }
+.canvas-box.zoomed canvas { cursor: grab; }
+#cv3 { cursor: grab; }
+.canvas-box.full { width: auto; margin: 0; position: fixed; inset: 0; z-index: 30; border: 0; border-radius: 0; box-shadow: none; aspect-ratio: auto; background: var(--bg);
+  display: grid; place-items: center;
+  padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px); }
+.canvas-box.full canvas { width: min(100vw, 100vh); height: min(100vw, 100vh); cursor: zoom-out; }
+.canvas-box.full #cv3 { width: 100%; height: 100%; }
+.canvas-box.full.zoomed canvas { cursor: grab; }
+.round { flex: none; width: 44px; height: 44px; border-radius: 50%; border: 0; background: var(--card); color: var(--ink); box-shadow: 0 3px 10px rgba(30, 40, 50, .3);
+  display: grid; place-items: center; cursor: pointer; padding: 0; opacity: .75; }
+.round[aria-pressed="true"] { opacity: 1; box-shadow: 0 0 0 3px var(--accent), 0 3px 10px rgba(30, 40, 50, .3); }
+#optVeg .slash { display: none; }
+#optVeg[aria-pressed="false"] .slash { display: block; }
+.round svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.zoompill { flex: none; width: 44px; border-radius: 22px; background: var(--card); box-shadow: 0 3px 10px rgba(30, 40, 50, .3); display: grid; overflow: hidden; opacity: .75; }
+.zoompill button { width: 44px; height: 44px; border: 0; background: transparent; color: var(--ink); display: grid; place-items: center; cursor: pointer; padding: 0; }
+.zoompill button + button { border-top: 1px solid var(--line); }
+.zoompill button:active { background: var(--pill); }
+.zoompill svg { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.busy { position: absolute; left: 0; right: 0; bottom: 0; padding: 10px 14px; background: color-mix(in srgb, var(--card) 94%, transparent); display: grid; gap: 6px; font-size: 13px; }
+.bar { height: 8px; background: var(--track); border-radius: 4px; overflow: hidden; }
+.bar i { display: block; height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+
+.card { background: var(--card); border-radius: 28px; box-shadow: var(--shadow); padding: 18px 18px 20px; }
+.card-title { font-weight: 600; font-size: 24px; line-height: 1.2; margin: 0 0 8px; }
+.stats { margin: 0; font-size: 13.5px; font-variant-numeric: tabular-nums; white-space: pre-line; min-height: 4.4em; }
+.tabs { display: flex; gap: 4px; overflow-x: auto; margin: 0 -6px 8px; padding: 2px 6px; scrollbar-width: none; }
+.tabs::-webkit-scrollbar { display: none; }
+.tab { flex: none; min-height: 44px; padding: 0 18px; border: 0; border-radius: 999px; background: transparent; color: var(--ink); font-weight: 500; cursor: pointer; white-space: nowrap; }
+.tab[aria-selected="true"] { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 12px 0; }
+
+.row, .line { display: grid; grid-template-columns: minmax(0, 45%) 1fr; align-items: center; column-gap: 12px; padding: 6px 0; }
+.row label { display: flex; align-items: center; gap: 8px; min-width: 0; font-weight: 500; font-size: 14px; }
+.lt { display: grid; min-width: 0; line-height: 1.25; }
+.lt output[data-tier] { font-weight: 600; }
+.lt output[data-tier="0"] { color: #2f7d4a; } .lt output[data-tier="1"] { color: #4f8a2e; } .lt output[data-tier="2"] { color: #a07a14; }
+.lt output[data-tier="3"] { color: #bd5f23; } .lt output[data-tier="4"] { color: #b02f2f; }
+.lt output { font-size: 12.5px; color: var(--muted); font-weight: 400; font-variant-numeric: tabular-nums; }
+.ico { flex: none; width: 30px; height: 30px; padding: 6px; border-radius: 50%; background: var(--pill); color: var(--ink);
+  fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.lbl { font-weight: 500; }
+.row input[type=range] { width: 100%; height: 40px; margin: 0; -webkit-appearance: none; appearance: none; background: transparent; }
+input[type=range]::-webkit-slider-runnable-track { height: 10px; border-radius: 5px; background: linear-gradient(to right, var(--accent) var(--pct, 50%), var(--track) var(--pct, 50%)); }
+input[type=range]::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 34px; border-radius: 50%; background: var(--card); border: 3px solid var(--thumb-edge); margin-top: -12px; box-shadow: 0 2px 5px rgba(0, 0, 0, .2); }
+input[type=range]::-moz-range-track { height: 10px; border-radius: 5px; background: var(--track); }
+input[type=range]::-moz-range-progress { height: 10px; border-radius: 5px; background: var(--accent); }
+input[type=range]::-moz-range-thumb { width: 28px; height: 28px; border-radius: 50%; background: var(--card); border: 3px solid var(--thumb-edge); }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+button { font: inherit; color: inherit; }
+.chip, .pill { min-height: 44px; padding: 0 20px; background: var(--pill); border: 0; border-radius: 999px; cursor: pointer; font-weight: 500; color: var(--ink); }
+.seasons { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.seasons .chip { padding: 0; display: flex; align-items: center; justify-content: center; }
+.seasons .chip svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.seasons .chip[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+.sw { flex: none; justify-self: end; width: 58px; height: 34px; padding: 0; border: 0; border-radius: 999px; background: var(--track); position: relative; cursor: pointer; transition: background .15s; }
+.sw::after { content: ""; position: absolute; top: 4px; left: 4px; width: 26px; height: 26px; border-radius: 50%; background: var(--card); box-shadow: 0 2px 5px rgba(0, 0, 0, .25); transition: transform .15s; }
+.sw[aria-checked="true"] { background: var(--accent); }
+.sw[aria-checked="true"]::after { transform: translateX(24px); }
+@media (prefers-reduced-motion: reduce) { .sw, .sw::after { transition: none; } }
+.dicebtn { padding: 0 14px; min-width: 52px; display: grid; place-items: center; }
+.dicebtn svg { width: 24px; height: 24px; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.chip:active, .pill:active { background: var(--track); }
+.presetrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; margin-top: 6px; }
+.sel { min-height: 44px; width: 100%; padding: 0 44px 0 20px; border: 0; border-radius: 999px; background-color: var(--pill); color: var(--ink); font: inherit; font-weight: 500; cursor: pointer;
+  -webkit-appearance: none; appearance: none; text-overflow: ellipsis;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23403d39' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat; background-position: right 14px center; background-size: 18px; }
+.sel:active { background-color: var(--track); }
+.seedrow { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+input[type=number], input[type=text] {
+  width: 100%; min-height: 44px; padding: 0 16px; font: inherit; font-variant-numeric: tabular-nums;
+  background: var(--pill); color: var(--ink); border: 0; border-radius: 999px;
+}
+:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+
+.dock { position: fixed; left: 0; right: 0; bottom: 0; z-index: 20; pointer-events: none;
+  padding: 0 max(16px, env(safe-area-inset-right, 0px)) calc(14px + env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); }
+.dock-in { pointer-events: auto; max-width: 640px; margin: 0 auto; display: grid; grid-template-columns: 1fr; gap: 12px; }
+.btn { min-height: 54px; border-radius: 999px; border: 0; background: color-mix(in srgb, var(--pill) 94%, transparent); color: var(--ink); font-weight: 600; cursor: pointer; padding: 0 10px; white-space: nowrap; font-size: 15px;
+  box-shadow: 0 4px 12px rgba(30, 40, 50, .3); display: flex; align-items: center; justify-content: center; gap: 10px; }
+.btn svg { width: 22px; height: 22px; flex: none; fill: none; stroke: currentColor; stroke-width: 2.2; stroke-linecap: round; stroke-linejoin: round; }
+.btn.primary { background: var(--accent); color: var(--accent-ink); }
+.btn:disabled { opacity: .55; }
+.dock-in.two { grid-template-columns: minmax(0, 1fr) auto; }
+#getGame { width: 54px; padding: 0; flex: none; }
+#getGame svg { width: 26px; height: 26px; fill: currentColor; stroke: none; }
+a.btn { text-decoration: none; }
+#getGame[hidden] { display: none; }
+#getGame.ios .ic-android, #getGame:not(.ios) .ic-ios { display: none; }
+.toast { position: fixed; left: 50%; transform: translateX(-50%); bottom: calc(100px + env(safe-area-inset-bottom, 0px)); z-index: 25; max-width: calc(100% - 32px);
+  background: var(--card); color: var(--ink); padding: 10px 18px; border-radius: 999px; box-shadow: var(--shadow); font-size: 14px; font-weight: 500; }
+@media (prefers-reduced-motion: reduce) { .bar i { transition: none; } }
+.row[hidden] { display: none; }
+.modal { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(20, 30, 40, .5); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
+.modal-card { width: min(100%, 420px); background: var(--card); border-radius: 28px; box-shadow: var(--shadow); padding: 20px; display: grid; gap: 16px; }
+.modal-card .card-title { margin: 0; }
+.mbtns { display: grid; grid-template-columns: 1fr 1.4fr; gap: 12px; }
+.modes { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; padding: 2px 0; }
+.mode { min-height: 62px; padding: 6px 2px; border: 0; border-radius: 18px; background: var(--pill); color: var(--ink); cursor: pointer; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 10px; letter-spacing: -.2px; font-weight: 600; line-height: 1.1; text-align: center; min-width: 0; overflow-wrap: normal; }
+.mode svg { width: 24px; height: 24px; flex: none; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.mode[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); }
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="clouds" aria-hidden="true"><canvas id="clouds"></canvas></div>
+    <h1>Kalecik.json editor</h1>
+    <div class="lang">
+      <button class="pill" id="langBtn" type="button" aria-haspopup="true"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg></button>
+      <div class="langmenu" id="langMenu" hidden></div>
+    </div>
+  </header>
+
+  <div class="stick" id="stick">
+    <div class="stage">
+      <div class="side l">
+      <button class="round" id="optVeg" type="button" aria-pressed="true" aria-label="Afficher la végétation" title="Végétation">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/><path class="slash" d="M4 4l16 16"/></svg>
+      </button>
+      <button class="round" id="optWinter" type="button" aria-pressed="false" aria-label="Hiver" title="Hiver">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5v19"/><path d="M12 2.5v19" transform="rotate(60 12 12)"/><path d="M12 2.5v19" transform="rotate(120 12 12)"/><path d="M9.6 4.7L12 7.1l2.4-2.4" transform="rotate(0 12 12)"/><path d="M9.6 4.7L12 7.1l2.4-2.4" transform="rotate(60 12 12)"/><path d="M9.6 4.7L12 7.1l2.4-2.4" transform="rotate(120 12 12)"/><path d="M9.6 4.7L12 7.1l2.4-2.4" transform="rotate(180 12 12)"/><path d="M9.6 4.7L12 7.1l2.4-2.4" transform="rotate(240 12 12)"/><path d="M9.6 4.7L12 7.1l2.4-2.4" transform="rotate(300 12 12)"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg>
+      </button>
+      <button class="round" id="opt3d" type="button" aria-pressed="false" aria-label="3D" title="3D">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9z"/><path d="M4 7.5L12 12l8-4.5M12 12v9"/></svg>
+      </button>
+      </div>
+      <div class="canvas-box" id="box">
+      <canvas id="cv" width="720" height="720" aria-label="Aperçu de la carte générée"></canvas>
+      <canvas id="cv3" width="1280" height="1280" hidden aria-label="Aperçu 3D"></canvas>
+      <div class="busy" id="busy" hidden><div class="bar"><i id="barfill"></i></div><span id="busyLabel">Préparation</span></div>
+      </div>
+      <div class="side r">
+      <button class="round" id="expand" type="button" aria-pressed="false" aria-label="Plein écran" title="Plein écran">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+      </button>
+      <button class="round" id="dlImg" type="button" aria-label="Enregistrer l'image" title="Enregistrer l'image">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg>
+      </button>
+      <div class="zoompill" role="group" aria-label="Zoom">
+        <button type="button" id="zoomIn" aria-label="Zoom avant" title="Zoom +"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button type="button" id="zoomOut" aria-label="Zoom arrière" title="Zoom −"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14"/></svg></button>
+      </div>
+      </div>
+    </div>
+  </div>
+
+  <section class="card">
+    <div class="modes" id="modeBtns" role="group" aria-label="Mode de terrain">
+      <button type="button" class="mode" data-h="-6" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 18c2-1.4 3.5-1.4 5 0s3 1.4 5 0 3.5-1.4 5 0 3 1.4 5 0"/><path d="M5 14a3 3 0 0 1 6 0M14 14a2 2 0 0 1 4 0"/></svg><span data-t>Archipel</span></button>
+      <button type="button" class="mode" data-h="0.5" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 8c4 0 6 3.5 9 3.5S17 15 21 15"/><path d="M3 19c2-1.2 3.2-1.2 4.5 0s3 1.2 4.5 0 3.2-1.2 4.5 0 3 1.2 4.5 0"/></svg><span data-t>Rivage</span></button>
+      <button type="button" class="mode" data-h="1" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 18h20"/><circle cx="12" cy="10" r="3.2"/><path d="M12 4.5V3M5.5 7l-1-1M18.5 7l1-1"/></svg><span data-t>Plaine</span></button>
+      <button type="button" class="mode" data-h="6" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 19h5l2-8h6l2 8h5"/></svg><span data-t>Plateau</span></button>
+      <button type="button" class="mode" data-h="10" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 19l6-10 4 6 3-4 7 8z"/></svg><span data-t>Hautes terres</span></button>
+    </div>
+    <hr>
+    <div class="line">
+      <label class="lbl" for="seed" data-t>Graine</label>
+      <div class="seedrow">
+        <input type="number" id="seed" inputmode="numeric" min="1" max="999999">
+        <button class="pill dicebtn" id="dice" type="button" aria-label="Au hasard" title="Au hasard"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1" fill="currentColor"/></svg></button>
+      </div>
+    </div>
+    <hr>
+    <label class="lbl" for="presetSel" data-t>Préréglages</label>
+    <div class="presetrow">
+      <select id="presetSel" class="sel"></select>
+      <button class="pill dicebtn" id="rand" type="button" aria-label="Aléatoire" title="Aléatoire"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1" fill="currentColor"/></svg></button>
+    </div>
+    <hr>
+    <div class="tabs" id="tabs" role="tablist"></div>
+    <div id="panes"></div>
+    <div id="extra">
+      <hr>
+      <div class="line"><label class="lbl" for="season" data-t>Saison enregistrée</label><input type="hidden" id="season" value="2"><div class="seasons" id="seasonBtns" role="group" aria-label="Saison enregistrée"><button type="button" class="chip" data-s="1" aria-pressed="false" aria-label="Printemps" title="Printemps"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-9"/><path d="M12 12c0-4 2.5-6 6-6 0 4-2.5 6-6 6z"/><path d="M12 14c0-3-2-5-5-5 0 3 2 5 5 5z"/></svg></button><button type="button" class="chip" data-s="2" aria-pressed="true" aria-label="Été" title="Été"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg></button><button type="button" class="chip" data-s="3" aria-pressed="false" aria-label="Automne" title="Automne"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19C5 10 10 5 19 5c0 9-5 14-14 14z"/><path d="M5 19c3-5 6-8 10-10"/></svg></button><button type="button" class="chip" data-s="4" aria-pressed="false" aria-label="Hiver" title="Hiver"><svg style="stroke-width:1.8" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5v19"/><path d="M12 2.5v19" transform="rotate(60 12 12)"/><path d="M12 2.5v19" transform="rotate(120 12 12)"/><path d="M9.6 4.7L12 7.1l2.4-2.4" transform="rotate(0 12 12)"/><path d="M9.6 4.7L12 7.1l2.4-2.4" transform="rotate(60 12 12)"/><path d="M9.6 4.7L12 7.1l2.4-2.4" transform="rotate(120 12 12)"/><path d="M9.6 4.7L12 7.1l2.4-2.4" transform="rotate(180 12 12)"/><path d="M9.6 4.7L12 7.1l2.4-2.4" transform="rotate(240 12 12)"/><path d="M9.6 4.7L12 7.1l2.4-2.4" transform="rotate(300 12 12)"/><circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none"/></svg></button></div></div>
+      <div class="line"><label class="lbl" for="mapname" data-t>Nom de la carte</label><input type="text" id="mapname" value="archipelago" maxlength="60"></div>
+      <hr>
+      <p class="stats" id="stats" aria-live="polite"></p>
+    </div>
+  </section>
+</div>
+
+<div class="modal" id="nameModal" hidden>
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="nameTitle">
+    <h2 class="card-title" id="nameTitle" data-t>Nom de la carte</h2>
+    <div class="seedrow">
+      <input type="text" id="nameInput" maxlength="60" autocomplete="off" spellcheck="false">
+      <button class="pill dicebtn" id="nameDice" type="button" aria-label="Au hasard" title="Au hasard"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="8.5" cy="8.5" r="1" fill="currentColor"/><circle cx="15.5" cy="8.5" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="8.5" cy="15.5" r="1" fill="currentColor"/><circle cx="15.5" cy="15.5" r="1" fill="currentColor"/></svg></button>
+    </div>
+    <div class="mbtns">
+      <button class="btn" id="nameCancel" type="button"><span data-t>Annuler</span></button>
+      <button class="btn primary" id="nameOk" type="button"><span data-t>Enregistrer le JSON</span></button>
+    </div>
+  </div>
+</div>
+<div class="toast" id="toast" hidden></div>
+<div class="dock"><div class="dock-in">
+  <button class="btn primary" id="save" type="button"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg><span data-t>Enregistrer le JSON</span></button>
+  <a class="btn" id="getGame" href="#" target="_blank" rel="noopener" hidden aria-label="Télécharger le jeu" title="Télécharger le jeu"><svg class="ic-ios" viewBox="0 0 24 24" aria-hidden="true"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/></svg><svg class="ic-android" viewBox="0 0 24 24" aria-hidden="true"><path fill="#00a0ff" d="M4.5 3l8.3 9-8.3 9z"/><path fill="#00e076" d="M4.5 3l11.5 6.5-3.2 2.5z"/><path fill="#ff3a44" d="M4.5 21l11.5-6.5-3.2-2.5z"/><path fill="#ffd500" d="M16 9.5l4 2.5-4 2.5-3.2-2.5z"/></svg></a>
+</div></div>
+
+<script>
+// Nuages d'en-tête : bruit de Perlin 2D (fbm, 4 octaves) rendu en blanc translucide sur un petit canvas étiré (lissage naturel), dérive lente.
+(function () {
+  const cv = document.getElementById('clouds'); if (!cv) return;
+  const ctx = cv.getContext('2d'); let img = null;
+  let s = 1337; const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  const perm = []; for (let i = 0; i < 256; i++) perm.push(i);
+  for (let i = 255; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); const t = perm[i]; perm[i] = perm[j]; perm[j] = t; }
+  const P = new Uint8Array(512); for (let i = 0; i < 512; i++) P[i] = perm[i & 255];
+  const fade = t => t * t * t * (t * (t * 6 - 15) + 10), lerp = (a, b, t) => a + (b - a) * t;
+  const grad = (h, x, y) => { switch (h & 7) { case 0: return x + y; case 1: return x - y; case 2: return -x + y; case 3: return -x - y; case 4: return x; case 5: return -x; case 6: return y; default: return -y; } };
+  function perlin(x, y) {
+    const fx = Math.floor(x), fy = Math.floor(y), X = fx & 255, Y = fy & 255;
+    x -= fx; y -= fy;
+    const u = fade(x), v = fade(y), a = P[X] + Y, b = P[X + 1] + Y;
+    return lerp(lerp(grad(P[a], x, y), grad(P[b], x - 1, y), u), lerp(grad(P[a + 1], x, y - 1), grad(P[b + 1], x - 1, y - 1), u), v);
+  }
+  function fbm(x, y) { let t = 0, a = 0.5, f = 1; for (let o = 0; o < 4; o++) { t += a * perlin(x * f, y * f); a *= 0.5; f *= 2; } return t; }
+  const sm = (a, b, v) => { const t = Math.min(1, Math.max(0, (v - a) / (b - a))); return t * t * (3 - 2 * t); };
+  function size() {
+    const r = cv.parentNode.getBoundingClientRect(), H = 40;
+    const W = Math.min(640, Math.max(80, Math.round(H * r.width / Math.max(1, r.height))));
+    if (cv.width !== W || cv.height !== H) { cv.width = W; cv.height = H; img = ctx.createImageData(W, H); }
+  }
+  function draw(ts) {
+    if (!img) size(); if (!img) return;
+    const W = cv.width, H = cv.height, d = img.data, ox = ts * 0.0001, oy = ts * 0.00002;
+    for (let y = 0; y < H; y++) {
+      const ny = y / H, mask = 1 - sm(0.3, 1, ny);
+      for (let x = 0; x < W; x++) {
+        const f = fbm(x * 0.05 + ox, y * 0.07 + oy + 3.7), dd = Math.min(1, Math.max(0, 0.5 + 0.9 * f));
+        const a = sm(0.5, 0.85, dd) * mask * 0.6, i = (y * W + x) * 4;
+        d[i] = d[i + 1] = d[i + 2] = 255; d[i + 3] = a * 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+  }
+  const still = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let last = 0;
+  function frame(ts) { if (ts - last > 50 && !document.hidden) { last = ts; draw(ts); } requestAnimationFrame(frame); }
+  addEventListener('resize', () => { size(); if (still) draw(8000); });
+  size(); draw(8000);
+  if (!still) requestAnimationFrame(frame);
+})();
+</script>
+<script>
+// Pas de la grille de hauteur (unités monde par échantillon). Un chunk = CH échantillons = CH*CS unités.
+// Mesuré en jeu (carte de calibration) : 0,75 u par échantillon, soit des chunks de 24 u. Surcharge possible : ?cs=0.5
+const CH = 32;
+const CS = (() => { try { const v = parseFloat(new URLSearchParams(location.search).get('cs')); return v > 0 ? v : 0.75; } catch (e) { return 0.75; } })();
+const U = CS * CH;            // taille d'un chunk en unités monde
+// Niveau de l'eau dans l'aperçu (hauteur en u). Mesuré en jeu (carte de calibration) : la ligne d'eau tombe à ≈ -0,5 u.
+// Surcharge possible : ?wl=0.07
+const WL = (() => { try { const v = parseFloat(new URLSearchParams(location.search).get('wl')); return isFinite(v) ? v : -0.5; } catch (e) { return -0.5; } })();
+const SK = 0.5 / CS;          // conversion des sigmas (calibrés à 0,5 u/échantillon)
+const tick = () => new Promise(r => setTimeout(r, 0));
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const ramp = v => v * v * (3 - 2 * v);
+// bruit pour les bords de la carte (déterministe, valeurs dans [-1, 1]) : partagé par le relief (génération) et la couleur (aperçus 2D/3D)
+const eHash = (ix, iz, s) => { let h = (Math.imul(ix, 374761393) + Math.imul(iz, 668265263) + Math.imul(s | 0, 1013904223)) | 0; h = Math.imul(h ^ (h >>> 13), 1274126177); h ^= h >>> 16; return (h >>> 0) / 2147483647.5 - 1; };
+const eVal = (x, z, s) => {
+  const ix = Math.floor(x), iz = Math.floor(z), fx = x - ix, fz = z - iz, u = fx * fx * (3 - 2 * fx), v = fz * fz * (3 - 2 * fz);
+  const a = eHash(ix, iz, s), b = eHash(ix + 1, iz, s), c = eHash(ix, iz + 1, s), d = eHash(ix + 1, iz + 1, s);
+  return (a + (b - a) * u) * (1 - v) + (c + (d - c) * u) * v;
+};
+const edgeWave = (x, z, s) => eVal(x / 28, z / 28, s) * 0.65 + eVal(x / 11 + 31.7, z / 11 - 17.3, s + 7) * 0.35;                // contour ondulé du fondu
+const edgeGrain = (x, z, s) => eVal(x / 3.2 + 9.1, z / 3.2 + 4.4, s + 13) * 0.6 + eVal(x / 1.4 - 5.2, z / 1.4 + 11.8, s + 19) * 0.4;   // grain fin
+
+function mulberry32(a) {
+  return function () {
+    a |= 0; a = a + 0x6D2B79F5 | 0;
+    let t = Math.imul(a ^ a >>> 15, 1 | a);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+function makeRng(seed) {
+  const r = mulberry32(seed >>> 0);
+  let spare = null;
+  return {
+    random: r,
+    uniform: (a, b) => a + (b - a) * r(),
+    int: (a, b) => a + Math.floor(r() * (b - a)),
+    choice: arr => arr[Math.floor(r() * arr.length)],
+    normal() {
+      if (spare !== null) { const s = spare; spare = null; return s; }
+      let u = 0; while (u === 0) u = r();
+      const v = r(), m = Math.sqrt(-2 * Math.log(u));
+      spare = m * Math.sin(2 * Math.PI * v);
+      return m * Math.cos(2 * Math.PI * v);
+    }
+  };
+}
+
+function gaussian(src, N, sigma) {
+  const rad = Math.floor(4 * sigma + 0.5);
+  const k = new Float32Array(2 * rad + 1);
+  let sum = 0;
+  for (let i = -rad; i <= rad; i++) { k[i + rad] = Math.exp(-0.5 * i * i / (sigma * sigma)); sum += k[i + rad]; }
+  for (let i = 0; i < k.length; i++) k[i] /= sum;
+  const refl = i => { if (i < 0) i = -i - 1; if (i >= N) i = 2 * N - i - 1; return i < 0 ? 0 : i >= N ? N - 1 : i; };
+  const tmp = new Float32Array(N * N), out = new Float32Array(N * N);
+  for (let r = 0; r < N; r++) {
+    const o = r * N;
+    for (let c = 0; c < N; c++) {
+      let s = 0;
+      for (let j = -rad; j <= rad; j++) s += k[j + rad] * src[o + refl(c + j)];
+      tmp[o + c] = s;
+    }
+  }
+  for (let r = 0; r < N; r++) {
+    for (let c = 0; c < N; c++) {
+      let s = 0;
+      for (let j = -rad; j <= rad; j++) s += k[j + rad] * tmp[refl(r + j) * N + c];
+      out[r * N + c] = s;
+    }
+  }
+  return out;
+}
+
+function placeIslands(rng, nBig, nSmall, half, gap, rbig, rsmall) {
+  // La taille de la carte est fixe : si les îles ne tiennent pas, on réduit leurs rayons, l'écart et la marge de bord jusqu'à ce que tout rentre.
+  const GF = [1, 0.75, 0.5, 0.3, 0.15, 0]; // d'abord on rapproche les îles (jusqu'à les coller), ensuite seulement on réduit leurs rayons
+  for (let k = 0; ; k++) {
+    const f = k < GF.length ? 1 : Math.pow(0.92, k - GF.length + 1), gf = k < GF.length ? GF[k] : 0;
+    if (f < 0.08) throw new Error('Les îles ne tiennent pas dans la carte : réduisez leur nombre.');
+    const margin = 34 * f, g = gap * gf;
+    const rb = [rbig[0] * f, rbig[1] * f], rs = [Math.max(1, rsmall[0] * f), Math.max(1, rsmall[1] * f)];
+    const placed = [], big = [], small = [];
+    const tryPlace = (r, minGap, tries = 1500) => {
+      for (let t = 0; t < tries; t++) {
+        const lim = half - r - margin;
+        if (lim <= 0) return null;
+        const x = rng.uniform(-lim, lim), z = rng.uniform(-lim, lim);
+        if (placed.every(([px, pz, pr]) => Math.hypot(x - px, z - pz) - r - pr >= minGap)) return [x, z, r];
+      }
+      return null;
+    };
+    let ok = true;
+    for (let i = 0; i < nBig; i++) {
+      const c = tryPlace(rng.uniform(rb[0], rb[1]), g);
+      if (!c) { ok = false; break; }
+      placed.push(c); big.push(c);
+    }
+    if (ok) {
+      let all = true;
+      for (let i = 0; i < nSmall; i++) {
+        const c = tryPlace(rng.uniform(rs[0], rs[1]), 28 * g / 45);
+        if (!c) { all = false; break; }
+        placed.push(c); small.push(c);
+      }
+      if (all) return { big, small, half, scale: f };
+    }
+  }
+}
+
+async function generate(p, progress, cancelled) {
+  const stage = async (pct, label) => {
+    progress && progress(pct, label);
+    await tick();
+    if (cancelled && cancelled()) throw new Error('cancelled');
+  };
+  const t0 = Date.now();
+  const seed = p.seed;
+  const rng = makeRng(seed);
+  // hauteur du monde infini (base_h) ; au-dessus du niveau de l'eau, le générateur bascule en paysage terrestre (pas d'îles)
+  const WH = clamp(Number.isFinite(p.worldH) ? p.worldH : -6, -6, 12);
+  const land = WH > WL + 0.01;
+  // Profil de terrain propre à chaque hauteur de monde : plaines (part de terrain plat), collines, amplitude du bruit de fond,
+  // échelle des montagnes (hauteur / emprise), terrasses (plateau : replats à bords raides), crêtes (hautes terres : relief vif).
+  const prof = !land ? { plains: p.plains, hill: 1, landAmp: 1.4, mtn: 1, msz: 1, terrace: 0, ridge: 0 }
+    : WH <= 0.75 ? { plains: 0.55, hill: 0.5, landAmp: 0.9, mtn: 0.45, msz: 0.8, terrace: 0, ridge: 0, shore: 1 }      // Rivage : bas, doux, proche de l'eau
+    : WH <= 3 ? { plains: 0.9, hill: 0.25, landAmp: 0.55, mtn: 0.35, msz: 0.8, terrace: 0, ridge: 0 }       // Plaine : très plat, quelques ondulations
+    : WH <= 8 ? { plains: 0.4, hill: 0.4, landAmp: 3.2, mtn: 0.5, msz: 1, terrace: 1.3, tb: 0.97, tr: 0.22, ridge: 0, flare: 1, merge: 1 }   // Plateau : rizières, nombreux replats étagés aux contours sinueux
+    : { plains: 0.1, hill: 1.2, landAmp: 2.8, mtn: 0.65, msz: 0.7, terrace: 4.5, ridge: 1.2, bowl: 9, belt: 1 };                // Hautes terres : plusieurs plateaux étagés, relief marqué, crêtes (+ canyons)
+  const ww = clamp(Number.isFinite(p.waterWidth) ? p.waterWidth : 1, 0.4, 3);   // largeur des points d'eau (lacs, rivières)
+  const wd = clamp(Number.isFinite(p.waterDepth) ? p.waterDepth : 2.5, 0.5, 6);   // profondeur des points d'eau (lacs, étangs, rivières) sous la ligne d'eau
+  let half = Math.max(U, Math.round(p.size / U) * U);
+  const pl = land ? placeIslands(rng, p.big, 0, half, 30, p.bigRadius, [1, 1]) : placeIslands(rng, p.big, p.small, half, p.gap, p.bigRadius, p.smallRadius);
+  const big = pl.big, small = pl.small; half = pl.half;
+  const msc = clamp(half / 96, 0.5, 3), wk = ww * msc;   // échelle selon la taille de la carte (96 = taille de référence) : montagnes, lacs, rivières
+  const islands = big.concat(small);
+  const A0 = -half / U, A1 = half / U - 1;
+  const N = (A1 - A0 + 1) * CH, X0 = A0 * U;
+  const NN = N * N;
+  const xs = new Float32Array(N);
+  for (let i = 0; i < N; i++) xs[i] = X0 + i * CS;
+
+  function noise(scale, s) {
+    const r = makeRng((seed * 1009 + s) >>> 0);
+    const g = Math.max(2, Math.floor(N * CS / scale));
+    const M = g + 3;
+    const arr = new Float32Array(M * M);
+    for (let i = 0; i < arr.length; i++) arr[i] = r.normal();
+    const O = Math.round(M * N / g);
+    const idx = new Int32Array(N * 4), w = new Float32Array(N * 4);
+    for (let i = 0; i < N; i++) {
+      const src = O > 1 ? i * (M - 1) / (O - 1) : 0;
+      const f = Math.floor(src), t = src - f, t2 = t * t, t3 = t2 * t;
+      w[i * 4] = -0.5 * t3 + t2 - 0.5 * t;
+      w[i * 4 + 1] = 1.5 * t3 - 2.5 * t2 + 1;
+      w[i * 4 + 2] = -1.5 * t3 + 2 * t2 + 0.5 * t;
+      w[i * 4 + 3] = 0.5 * t3 - 0.5 * t2;
+      for (let q = 0; q < 4; q++) idx[i * 4 + q] = clamp(f - 1 + q, 0, M - 1);
+    }
+    const tmp = new Float32Array(M * N);
+    for (let rr = 0; rr < M; rr++) {
+      for (let c = 0; c < N; c++) {
+        let s2 = 0;
+        for (let q = 0; q < 4; q++) s2 += w[c * 4 + q] * arr[rr * M + idx[c * 4 + q]];
+        tmp[rr * N + c] = s2;
+      }
+    }
+    const out = new Float32Array(NN);
+    let mean = 0;
+    for (let row = 0; row < N; row++) {
+      const i0 = idx[row * 4] * N, i1 = idx[row * 4 + 1] * N, i2 = idx[row * 4 + 2] * N, i3 = idx[row * 4 + 3] * N;
+      const w0 = w[row * 4], w1 = w[row * 4 + 1], w2 = w[row * 4 + 2], w3 = w[row * 4 + 3];
+      for (let c = 0; c < N; c++) {
+        const v = w0 * tmp[i0 + c] + w1 * tmp[i1 + c] + w2 * tmp[i2 + c] + w3 * tmp[i3 + c];
+        out[row * N + c] = v; mean += v;
+      }
+    }
+    mean /= NN;
+    let vr = 0;
+    for (let i = 0; i < NN; i++) { const d = out[i] - mean; vr += d * d; }
+    const sd = Math.sqrt(vr / NN) || 1;
+    for (let i = 0; i < NN; i++) out[i] = (out[i] - mean) / sd;
+    return out;
+  }
+  function fbm(scale, s, octaves = 4, gain = 0.5) {
+    const t = new Float32Array(NN);
+    let tot = 0, amp = 1;
+    for (let o = 0; o < octaves; o++) {
+      const n = noise(scale / Math.pow(2, o), s + o * 17);
+      for (let i = 0; i < NN; i++) t[i] += amp * n[i];
+      tot += amp; amp *= gain;
+    }
+    for (let i = 0; i < NN; i++) t[i] /= tot;
+    return t;
+  }
+
+  await stage(0.04, 'Côtes');
+  const warp = fbm(40, 1, 4), w2 = fbm(14, 2, 3);
+  const cn = p.coastNoise || 0;
+  if (cn > 0) {
+    const ca1 = fbm(7, 3, 3), ca2 = fbm(2.6, 4, 2);
+    for (let i = 0; i < NN; i++) warp[i] = warp[i] * 9 + w2[i] * 3 + cn * (ca1[i] * 6 + ca2[i] * 2.5);
+  } else {
+    for (let i = 0; i < NN; i++) warp[i] = warp[i] * 9 + w2[i] * 3;
+  }
+  const sd = new Float32Array(NN).fill(land ? 1e3 : -1e9);
+  for (const [cx, cz, R] of (land ? [] : islands)) {
+    const ph0 = rng.uniform(0, 6.28), ph1 = rng.uniform(0, 6.28);
+    for (let r = 0; r < N; r++) {
+      const z = xs[r];
+      for (let c = 0; c < N; c++) {
+        const x = xs[c];
+        const ang = Math.atan2(z - cz, x - cx);
+        const e = 1 + 0.25 * Math.sin(ang * 2 + ph0) + 0.12 * Math.sin(ang * 3 + ph1);
+        const v = R * e - Math.hypot(x - cx, z - cz) + warp[r * N + c];
+        if (v > sd[r * N + c]) sd[r * N + c] = v;
+      }
+    }
+  }
+  const thr = 0.9 - 1.7 * p.cliffs;
+  let cliff;
+  if (p.cliffs > 0) {
+    cliff = fbm(55, 7, 2);
+    for (let i = 0; i < NN; i++) cliff[i] = clamp((cliff[i] - thr) * 3, 0, 1);
+    cliff = gaussian(cliff, N, 3 * SK);
+  } else cliff = new Float32Array(NN);
+
+  await stage(0.2, 'Montagnes');
+  const peaks = [], flats = [], ridges = [], mains = [];
+  for (const [cx, cz, R] of big) {
+    const baseAng = rng.uniform(0, 6.28);
+    // une seule montagne par île ; le curseur de surface élargit ce massif et ajoute du relief autour (sommets satellites, crêtes en étoile, piémont)
+    const ms = p.mtnSize, grow = Math.max(0, ms - 1);
+    const coff = rng.uniform(0.05, 0.2) * R, cang = rng.uniform(0, 6.28);
+    const mx = cx + coff * Math.cos(cang), mz = cz + coff * Math.sin(cang);
+    const rm0 = rng.uniform(11, 17) * prof.msz * (ms < 1 ? ms : 1 + 0.7 * grow) * clamp(R / 40, 0.4, 1); // massif réduit sur les petites îles
+    const kM = land ? msc : Math.min(msc, Math.max(1, R * 0.55 / rm0));   // proportionnel à la carte ; en archipel, borné par la taille de l'île
+    const rm = rm0 * kM;
+    const PM = p.mountain * prof.mtn;
+    const main = [mx, mz, rm, PM * rng.uniform(0.85, 1.0)];
+    peaks.push(main); mains.push([main, cx, cz, R]);
+    const ns = Math.floor(grow / 0.3 + 1e-6);
+    const a0 = rng.uniform(0, 6.28);
+    for (let k = 0; k < ns; k++) {
+      const ang = a0 + k * 2 * Math.PI / ns + rng.uniform(-0.4, 0.4);
+      let dist = rm * rng.uniform(0.9, 1.35);
+      let sx = mx + dist * Math.cos(ang), sz = mz + dist * Math.sin(ang);
+      const dc = Math.hypot(sx - cx, sz - cz), lim = R * 0.85;
+      if (dc > lim) { sx = cx + (sx - cx) * lim / dc; sz = cz + (sz - cz) * lim / dc; }
+      const sat = [sx, sz, rng.uniform(7, 11) * (1 + 0.25 * grow) * kM, PM * rng.uniform(0.45, 0.7)];
+      peaks.push(sat);
+      ridges.push([main, sat]);
+    }
+    if (grow > 0) peaks.push([mx, mz, rm * 2.1, PM * 0.3 * Math.min(1, grow / 1.2)]);
+    const away = baseAng + Math.PI / 2;
+    [rng.uniform(15, 19) * kM, rng.uniform(9, 12) * kM].forEach((fr, k) => {
+      const ang = away + (k * 1.1 - 0.5) * rng.uniform(0.6, 1.0);
+      const dist = R * (k === 0 ? 0.42 : 0.62);
+      flats.push([cx + dist * Math.cos(ang), cz + dist * Math.sin(ang), fr]);
+    });
+  }
+  let mount = new Float32Array(NN);
+  const rough = p.roughness;
+  for (const [px, pz, r, amp] of peaks) {
+    const s0 = Math.floor(Math.abs(px) * 7 + Math.abs(pz) * 3) % 9000;
+    const ridgeN = fbm(18 - 10 * rough, s0 + 99, 3 + Math.floor(2 * rough), 0.35 + 0.2 * rough);
+    const fine = fbm(8 - 5 * rough, s0 + 5, 2, 0.4);
+    const a0 = 0.8 - 0.25 * rough, a1 = 0.25 + 0.3 * rough, a2 = 1.2 + 3 * rough;
+    for (let rr = 0; rr < N; rr++) {
+      for (let c = 0; c < N; c++) {
+        const d = Math.hypot(xs[c] - px, xs[rr] - pz) / r;
+        if (d > 4) continue;
+        const sh = Math.exp(-d * d), i = rr * N + c;
+        // bruit lisse (dominant) + léger « sharp » (arêtes vives, 25 %)
+        const smooth = clamp(0.5 + 0.4 * ridgeN[i], 0, 1), sharp = 1 - Math.abs(ridgeN[i]);
+        const ridge = 0.92 * smooth + 0.08 * sharp;
+        mount[i] += amp * sh * (a0 + a1 * ridge) + sh * a2 * 0.6 * fine[i];
+      }
+    }
+    await stage(0.3, "Montagnes");
+  }
+  // crêtes qui relient les sommets voisins d'une même île
+  for (const [a, b] of ridges) {
+    const dx = b[0] - a[0], dz = b[1] - a[1], L2 = dx * dx + dz * dz || 1;
+    const amp = 0.7 * Math.min(a[3], b[3]), wd = 6.5 * clamp(a[2] / 14, 0.6, 2.5);
+    const rn = fbm(14, Math.floor(Math.abs(a[0]) * 5 + Math.abs(b[1]) * 3) % 9000 + 301, 2);
+    for (let rr = 0; rr < N; rr++) {
+      for (let c2 = 0; c2 < N; c2++) {
+        const x = xs[c2], z = xs[rr];
+        const t = clamp(((x - a[0]) * dx + (z - a[1]) * dz) / L2, 0, 1);
+        const d = Math.hypot(x - (a[0] + t * dx), z - (a[1] + t * dz)) / wd;
+        if (d > 3) continue;
+        const i = rr * N + c2;
+        mount[i] += amp * Math.exp(-d * d) * Math.max(0.2, 0.85 + 0.25 * rn[i]);
+      }
+    }
+    await stage(0.4, 'Montagnes');
+  }
+  if (land && prof.belt) {   // chaîne de montagnes en ceinture : anneau (carré arrondi) à ~1/3 du bord, hauteur et largeur irrégulières, percé par les rivières
+    const bn = fbm(22, 71, 3), bh = fbm(55, 73, 2), Rb = half * 0.66, wdt = 13 * msc, amp0 = p.mountain * 0.9;
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      const i = r * N + c, x = xs[c], z = xs[r], d = Math.pow(x * x * x * x + z * z * z * z, 0.25);
+      const e = (d - (Rb + 5 * bn[i] * msc)) / (wdt * clamp(1 + 0.25 * bn[i], 0.7, 1.3));
+      if (e > 3) continue;
+      mount[i] += amp0 * clamp(0.8 + 0.3 * bh[i], 0.45, 1.2) * Math.exp(-e * e);
+    }
+  }
+  mount = gaussian(mount, N, (4.2 - 2.4 * rough) * SK);
+  { // sommets arrondis : mélange avec une version plus floue du massif (la hauteur max reste proche du réglage)
+    const soft = gaussian(mount, N, 6 * SK);
+    for (let i = 0; i < NN; i++) mount[i] = 0.62 * mount[i] + 0.38 * soft[i] * 1.06;
+  }
+
+  await stage(0.45, 'Relief');
+  const pmN = fbm(70, 5, 2), hillN = fbm(45, 11, 3), fineN = fbm(6, 13, 2);
+  const flatN = fbm(8, 77, 2);
+  const plateauN = fbm(20, 21, 2);
+  const fw = new Float32Array(NN);
+  for (const [fx, fz, fr] of flats) {
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      const d = Math.hypot(xs[c] - fx, xs[r] - fz) / fr;
+      if (d > 3) continue;
+      const v = Math.exp(-Math.pow(d, 4)), i = r * N + c;
+      if (v > fw[i]) fw[i] = v;
+    }
+  }
+  const ih = new Float32Array(NN);
+  for (let i = 0; i < NN; i++) {
+    const pm = clamp((pmN[i] + 0.7 + ((land ? prof.plains : p.plains) - 0.7) * 2.2) * 2, 0, 1);
+    const hills = Math.max(hillN[i] + 0.2, 0) * 2.4 * prof.hill * (1 - 0.9 * pm);
+    let base = 1.6 + hills + 0.35 * fineN[i] * (1 - 0.5 * pm);
+    base = base * (1 - fw[i]) + (1.9 + 0.08 * flatN[i]) * fw[i];
+    ih[i] = base + mount[i] * (1 - 0.9 * fw[i]);
+  }
+
+  await stage(0.6, 'Terrain');
+  let H = new Float32Array(NN);
+  const detail = noise(3, 31);
+  const landN = land ? fbm(110, 61, 3) : null;
+  const ridgeL = land && prof.ridge ? fbm(40, 67, 3) : null;
+  for (let i = 0; i < NN; i++) {
+    if (land) {
+      let v = (ih[i] - 1.6) + prof.landAmp * landN[i];
+      if (prof.bowl) {   // cuvette : le terrain s'abaisse vers le centre de la carte et retrouve sa hauteur par défaut sur les côtés
+        const rx = xs[i % N], rz = xs[(i / N) | 0], rr = Math.max(Math.hypot(rx, rz) / (half * 0.95), 0);
+        const u = clamp(rr, 0, 1), b = 1 - u * u * (3 - 2 * u);
+        v -= prof.bowl * b * (0.85 + 0.15 * b);
+      }
+      if (ridgeL) v += prof.ridge * (clamp(1 - Math.abs(ridgeL[i]) * 1.6, -0.6, 1) - 0.25);   // crêtes et vallées marquées
+      if (prof.terrace) {   // terrasses : replats séparés par des gradins raides, mélangés au relief d'origine
+        const q = v / prof.terrace, f = q - Math.floor(q);
+        const tv = (Math.floor(q) + ramp(clamp((f - (1 - (prof.tr || 0.3))) / (prof.tr || 0.3), 0, 1))) * prof.terrace;
+        v = v * (1 - (prof.tb || 0.8)) + tv * (prof.tb || 0.8);
+      }
+      H[i] = WH + v + 0.05 * detail[i]; continue;
+    }   // paysage terrestre : relief posé sur la hauteur du monde
+    const s = sd[i], cl = cliff[i];
+    let h;
+    if (s > 0) {
+      const inland = s;
+      const lin = 0.08 + inland * 0.1;
+      let b = Math.min(lin + (ih[i] - 1.6) * ramp(clamp((inland - 6) / 16, 0, 1)), ih[i]);
+      b = Math.max(b, lin);
+      b = Math.min(b, Math.max(ih[i], lin));
+      const plateau = 4.0 + 2.0 * plateauN[i];
+      const cl2 = inland < 1.8 ? 0.1 + inland / 1.8 * (plateau - 0.1)
+        : plateau + (ih[i] - 1.6) * ramp(clamp((inland - 1.8) / 10, 0, 1));
+      h = clamp(b * (1 - cl) + cl2 * cl, 0, 30);
+    } else {
+      const out = -s;
+      let sea = Math.max((0.05 - out * 0.12) * (1 - cl) + (-out * 3.0) * cl, WL - wd);   // fonds marins : même profondeur que lacs et rivières
+      const far = clamp((out - 26) / 10, 0, 1);
+      h = sea * (1 - far) - 6.0 * far;
+    }
+    if (h > -2.5 && h < 2) h += 0.05 * detail[i];
+    H[i] = h;
+  }
+  // zones plates en bordure des îles (hauteur 0,8 – 1,2 u) : plateformes constructibles près de la côte
+  if (p.flatCoast > 0 && !land) {
+    const fm = fbm(30, 91, 3), fh = noise(9, 93);
+    const thr = 1.1 - 1.9 * p.flatCoast;              // 0 : aucune zone · 1 : presque tout le littoral
+    const W = 16;                                      // profondeur max vers l'intérieur (u)
+    for (let i = 0; i < NN; i++) {
+      const s = sd[i]; if (s <= 0) continue;
+      const m = ramp(clamp((fm[i] - thr) / 0.35, 0, 1)); if (m <= 0) continue;
+      const inw = ramp(clamp((s - 1.5) / 5, 0, 1)) * (1 - ramp(clamp((s - W) / 7, 0, 1)));  // plage intacte, raccord doux
+      const w = ramp(clamp(m * inw * 1.6, 0, 1)); if (w <= 0) continue;          // cœur de zone à 100 % : parfaitement plat
+      const h0 = H[i], flat = 1.0 + 0.015 * clamp(fh[i], -1, 1);
+      // au pied des flancs : de légers paliers (marches de 1,2 u, replats horizontaux) qui s'estompent vers 4–7 u,
+      // les montagnes elles-mêmes ne sont pas modifiées
+      const q = Math.max(0, (h0 - flat) / 1.2), f = q - Math.floor(q);
+      const stair = flat + (Math.floor(q) + ramp(clamp((f - 0.6) / 0.4, 0, 1))) * 1.2;
+      const top = ramp(clamp((h0 - 4) / 3, 0, 1));
+      const target = stair * (1 - top) + h0 * top;
+      H[i] = h0 * (1 - w) + target * w;
+    }
+  }
+  // points d'eau : lacs (paysage terrestre) et rivières. Le niveau de l'eau étant global, ils sont creusés sous la ligne d'eau (profondeur = wd).
+  const H0 = Float32Array.from(H);   // terrain avant creusement des points d'eau
+  const deepPts = [];   // points les plus profonds : cuvettes du terrain naturel (paysage) ou mer (archipel), avant creusement des lacs et rivières
+  const wantLakes = Math.min(Math.round(p.lakes || 0), 10);
+  if (land) {
+    for (let r = 2; r < N - 2; r += 3) for (let c = 2; c < N - 2; c += 3) {
+      if (H[r * N + c] < WL - 0.3) deepPts.push([xs[c], xs[r], H[r * N + c]]);
+    }
+    deepPts.sort((u, v) => u[2] - v[2]);
+    if (deepPts.length > 600) deepPts.length = 600;   // les plus bas d'abord
+  } else if (wantLakes > 0) {
+    for (let r = 2; r < N - 2; r += 3) for (let c = 2; c < N - 2; c += 3) {
+      if (sd[r * N + c] < -4) deepPts.push([xs[c], xs[r], H[r * N + c]]);
+    }
+  }
+  const lakes = [], ponds = [], riverPaths = [];
+  if (land) {
+    let want = Math.min(Math.round(p.lakes || 0), 10);
+    // Rivage : soit un seul très grand lac au milieu, soit plusieurs petits lacs dispersés. Avec 3 lacs (valeur par défaut) le tirage dépend de la graine ;
+    // avec 1 ou 2 lacs ils sont grands, avec 4 ou plus ils sont petits.
+    const shoreBig = !!prof.shore && (want <= 2 || (want === 3 && makeRng((seed * 2654435761 + 5) >>> 0).random() < 0.5));
+    if (prof.shore && want === 3 && shoreBig) want = 1;
+    for (let k = 0, tries = 0; k < want && tries < 8000; tries++) {
+      const lr = prof.shore ? (shoreBig ? rng.uniform(30, 44) : rng.uniform(11, 19)) * wk * (tries > 3000 ? 0.8 : 1) : rng.uniform(15, 26) * wk * (tries > 3000 ? 0.75 : 1), lim = half - 34 - lr * 0.9;   // lacs bien plus larges que les rivières ; Rivage : très grands ou petits
+      if (lim <= 0) break;
+      let x = rng.uniform(-lim, lim), z = rng.uniform(-lim, lim);
+      if (shoreBig && !lakes.length) { const m = Math.min(lim, 0.12 * half); x = rng.uniform(-m, m); z = rng.uniform(-m, m); }   // Rivage : le premier grand lac occupe le milieu de la carte
+      if (lakes.length && tries < 5000 && (!prof.shore || shoreBig)) {   // les lacs se regroupent : chacun naît près d'un lac existant (rives à 10 – 45 u l'une de l'autre)
+        const [ox, oz, orr] = lakes[rng.int(0, lakes.length)], a = rng.uniform(0, 6.2832), d = orr + lr + rng.uniform(10, 45) * msc;
+        x = ox + d * Math.cos(a); z = oz + d * Math.sin(a);
+        if (Math.abs(x) > lim || Math.abs(z) > lim) continue;
+      }
+      if (!prof.shore && peaks.some(([px, pz, pr]) => Math.hypot(x - px, z - pz) < pr * 1.15 + lr)) continue;   // Rivage : reliefs bas, le lac peut les recouvrir
+      const gapL = prof.shore ? (shoreBig ? 12 : 30) * msc : tries < 3500 ? 90 * msc : tries < 6000 ? 45 * msc : 8;   // lacs bien espacés ; l'écart se relâche seulement si la carte est trop remplie
+      if (lakes.some(([ox, oz, orr]) => Math.hypot(x - ox, z - oz) < orr + lr + gapL)) continue;
+      lakes.push([x, z, lr]); k++;
+    }
+  }
+  if (!land && wantLakes > 0 && islands.length) {
+    // lacs sur les îles : en terrain bas, loin de la côte et des sommets
+    const at = (x, z) => clamp(Math.round((z - X0) / CS), 0, N - 1) * N + clamp(Math.round((x - X0) / CS), 0, N - 1);
+    for (let k = 0, tries = 0; k < wantLakes && tries < 4000; tries++) {
+      const [cx, cz, R] = islands[rng.int(0, islands.length)];
+      const lr = rng.uniform(5, 9) * wk * clamp(R / 30, 0.5, 1.3);
+      if (lr > R * 0.4) continue;
+      const a = rng.uniform(0, 6.28), d = rng.uniform(0, R * 0.6), x = cx + d * Math.cos(a), z = cz + d * Math.sin(a);
+      if (sd[at(x, z)] < lr * 1.8 + 5) continue;
+      let low = true;
+      for (let q = 0; q < 7 && low; q++) { const aa = q * 0.898, i2 = at(x + lr * 1.3 * Math.cos(aa) * (q ? 1 : 0), z + lr * 1.3 * Math.sin(aa) * (q ? 1 : 0)); if (H[i2] > 5 || sd[i2] < 3) low = false; }
+      const gapI = tries < 2500 ? 40 * msc : 8;
+      if (!low || lakes.some(([ox, oz, orr]) => Math.hypot(x - ox, z - oz) < orr + lr + gapI)) continue;
+      lakes.push([x, z, lr]); k++;
+    }
+  }
+  const wired = new Set(), linkStarts = [];   // lacs déjà raccordés ; points de départ des raccords (pour les espacer)
+  const farFrom = (list, x, z, d) => !list.some(q => (q[0] - x) ** 2 + (q[1] - z) ** 2 < d * d);
+  const nRiv = mains.length || land ? Math.max(0, Math.round(p.rivers || 0)) : 0;
+  let riverW = null, nMainRivers = 0;
+  if (nRiv > 0) {
+    // Rivières : la première (principale) est un anneau fermé qui longe en sinuant les bords de la carte.
+    // Chaque rivière suivante part de la principale et y retourne à un autre endroit (jamais en parallèle, croisements à angle droit entre elles).
+    const rr = makeRng((seed * 7919 + 13) >>> 0), lim = half - 1;   // générateur à part : ne décale pas le reste de la carte
+    const tang = (pts, i) => {
+      const a = pts[Math.max(i - 3, 0)], b = pts[Math.min(i + 3, pts.length - 1)];
+      const dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1;
+      return [dx / l, dz / l];
+    };
+    const segInt = (a, b, c, d) => {
+      const rx = b[0] - a[0], rz = b[1] - a[1], sx = d[0] - c[0], sz = d[1] - c[1], den = rx * sz - rz * sx;
+      if (Math.abs(den) < 1e-9) return null;
+      const qx = c[0] - a[0], qz = c[1] - a[1], t = (qx * sz - qz * sx) / den, u = (qx * rz - qz * rx) / den;
+      if (t < 0 || t > 1 || u < 0 || u > 1) return null;
+      return [a[0] + t * rx, a[1] + t * rz];
+    };
+    const meander = (A, B, amp, taper) => {
+      const len = Math.hypot(B[0] - A[0], B[1] - A[1]), n = Math.max(2, Math.ceil(len / 2));
+      const nx = -(B[1] - A[1]) / len, nz = (B[0] - A[0]) / len;
+      // trois ondulations superposées (grand lacet, méandre, légère irrégularité) : virages amples et doux, jamais de ligne droite
+      const l0 = rr.uniform(240, 380) * msc, l1 = rr.uniform(85, 140) * msc, l2 = rr.uniform(50, 75) * msc, ph0 = rr.uniform(0, 6.28), ph1 = rr.uniform(0, 6.28), ph2 = rr.uniform(0, 6.28);
+      const a0 = amp * rr.uniform(0.9, 1.4), a1 = amp * rr.uniform(0.7, 1), a2 = amp * 0.3, pts = [];
+      for (let q = 0; q <= n; q++) {
+        const t = q / n, s = t * len;
+        let off = a0 * Math.sin(s * 6.2832 / l0 + ph0) + a1 * Math.sin(s * 6.2832 / l1 + ph1) + a2 * Math.sin(s * 6.2832 / l2 + ph2);
+        if (taper) { const e = clamp(Math.min(s, len - s) / taper, 0, 1); off *= e * e * (3 - 2 * e); }   // l'ondulation s'annule aux deux extrémités (jonction nette avec l'anneau)
+        pts.push([clamp(A[0] + (B[0] - A[0]) * t + nx * off, -lim, lim), clamp(A[1] + (B[1] - A[1]) * t + nz * off, -lim, lim)]);
+      }
+      return pts;
+    };
+    const borderPt = (side, u) => side === 0 ? [u, -lim] : side === 1 ? [lim, u] : side === 2 ? [u, lim] : [-lim, u];
+    const clipLine = (W, d) => {
+      let t0 = -1e9, t1 = 1e9;
+      for (let k = 0; k < 2; k++) {
+        if (Math.abs(d[k]) < 1e-9) continue;
+        const a = (-lim - W[k]) / d[k], b = (lim - W[k]) / d[k];
+        t0 = Math.max(t0, Math.min(a, b)); t1 = Math.min(t1, Math.max(a, b));
+      }
+      return [t0, t1];
+    };
+    // Rivières en anneau : boucle fermée dont le rayon varie doucement (quelques harmoniques basses + une légère irrégularité fine)
+    const mkLine = (k, tr) => {
+      const shrink = 1 - 0.45 * Math.min(1, tr / 70);   // si la place manque, les anneaux d'essai rétrécissent
+      let cx, cz, R;
+      if (land) {
+        R = rr.uniform(0.2, 0.42) * lim * shrink;
+        const room = Math.max(0, lim * 0.96 - R * 1.3);
+        cx = rr.uniform(-room, room); cz = rr.uniform(-room, room);
+      } else {      // archipel : l'anneau entoure le massif d'une île
+        const m = mains[k % mains.length][0];
+        R = clamp(m[2] * rr.uniform(0.8, 1.4), 22 * msc, lim * 0.45) * shrink;
+        cx = clamp(m[0] + rr.uniform(-0.3, 0.3) * m[2], -lim + R * 1.3, lim - R * 1.3); cz = clamp(m[1] + rr.uniform(-0.3, 0.3) * m[2], -lim + R * 1.3, lim - R * 1.3);
+      }
+      if (R < 16 * msc) return null;
+      const sx = rr.uniform(0.8, 1.2), sz = rr.uniform(0.8, 1.2), rot = rr.uniform(0, 6.2832), cr = Math.cos(rot), sr = Math.sin(rot);
+      const hs = [];   // harmoniques : [fréquence, amplitude, phase]
+      for (const [f, a] of [[2, 0.07], [3, 0.06], [4, 0.04], [5, 0.03], [7, 0.02], [9, 0.012]]) hs.push([f, a * rr.uniform(0.5, 1.2), rr.uniform(0, 6.2832)]);
+      const n = Math.max(24, Math.ceil(6.2832 * R / 2)), pts = [];
+      for (let q = 0; q < n; q++) {
+        const th = q / n * 6.2832;
+        let g = 1; for (const [f, a, ph] of hs) g += a * Math.sin(f * th + ph);
+        const ux = R * g * Math.cos(th) * sx, uz = R * g * Math.sin(th) * sz;
+        pts.push([clamp(cx + ux * cr - uz * sr, -lim, lim), clamp(cz + ux * sr + uz * cr, -lim, lim)]);
+      }
+      pts.push([pts[0][0], pts[0][1]]);   // fermeture
+      return pts;
+    };
+    // renvoie le tracé validé (éventuellement coupé à une confluence) ou null
+    const validate = (pts, loop, merge, minD) => {
+      const cross = [];
+      for (let i = 0; i < pts.length - 1; i++) for (const ex of riverPaths) for (let j = 0; j < ex.length - 1; j++) {
+        if (Math.abs(pts[i][0] - ex[j][0]) > 6 || Math.abs(pts[i][1] - ex[j][1]) > 6) continue;
+        const h = segInt(pts[i], pts[i + 1], ex[j], ex[j + 1]); if (!h) continue;
+        const ta = tang(pts, i), tb = tang(ex, j);
+        cross.push({ i, x: h[0], z: h[1], c: Math.abs(ta[0] * tb[0] + ta[1] * tb[1]) });
+      }
+      cross.sort((a, b) => a.i - b.i);
+      const cs = [];
+      for (const c of cross) if (!cs.length || Math.hypot(c.x - cs[cs.length - 1].x, c.z - cs[cs.length - 1].z) > 6) cs.push(c);
+      if (loop && cs.length) return null;   // un anneau ne croise jamais une autre rivière
+      let path = pts;
+      if (merge && !loop) {   // confluence : la rivière s'arrête sur la première rivière rencontrée, avec un angle net (28° – 75°)
+        if (!cs.length) return null;
+        const c0 = cs[0]; if (c0.c < 0.25 || c0.c > 0.88) return null;
+        path = pts.slice(0, c0.i + 1); path.push([c0.x, c0.z]); cs.length = 1;
+        if (path.length < 20) return null;
+      } else {                // croisements : presque perpendiculaires (60° – 120°) et jamais rapprochés
+        for (let q = 0; q < cs.length; q++) {
+          if (cs[q].c > 0.5) return null;
+          if (q && Math.hypot(cs[q].x - cs[q - 1].x, cs[q].z - cs[q - 1].z) < 30 * msc) return null;
+        }
+      }
+      if (riverPaths.length) {
+        if (!loop) {   // le point de départ doit être loin de toute autre rivière
+          for (const ex of riverPaths) for (const q of ex) if ((q[0] - path[0][0]) ** 2 + (q[1] - path[0][1]) ** 2 < 900 * msc * msc) return null;
+        }
+        // jamais de tracé quasi parallèle : hors des abords d'un croisement, distance minimale à toutes les autres rivières
+        const m2 = minD * minD;
+        for (let k = 0; k < path.length; k += 2) {
+          const x = path[k][0], z = path[k][1];
+          if (cs.some(c => (x - c.x) ** 2 + (z - c.z) ** 2 < 900 * msc * msc)) continue;
+          for (const ex of riverPaths) for (const q of ex) if ((q[0] - x) ** 2 + (q[1] - z) ** 2 < m2) return null;
+        }
+      }
+      return path;
+    };
+    // Anneau principal en paysage terrestre : rectangle à coins arrondis collé aux bords, décalé vers l'intérieur par une ondulation
+    // (quelques ondes lentes + une irrégularité fine, nombre entier de périodes pour que la boucle se referme sans raccord)
+    const borderRing = () => {
+      const base = 3 * msc + 11 * wk, amp = 9 * msc * rr.uniform(0.9, 1.15);   // anneau proche du bord, avec de grands virages (la largeur d'eau compte)
+      const Lb = lim - base, rc = Lb * rr.uniform(0.22, 0.34), a = Lb - rc;
+      const S = 2 * a, Ar = rc * Math.PI / 2, P = 4 * S + 4 * Ar, lens = [S, Ar, S, Ar, S, Ar, S, Ar];
+      const pa = (s) => {
+        s = ((s % P) + P) % P;
+        let k = 0; while (k < 7 && s > lens[k]) { s -= lens[k]; k++; }
+        const u = s / lens[k], H = Math.PI / 2;
+        let f;
+        switch (k) {
+          case 0: return [-a + S * u, -Lb, 0, -1];
+          case 1: f = -H + u * H; return [a + rc * Math.cos(f), -a + rc * Math.sin(f), Math.cos(f), Math.sin(f)];
+          case 2: return [Lb, -a + S * u, 1, 0];
+          case 3: f = u * H; return [a + rc * Math.cos(f), a + rc * Math.sin(f), Math.cos(f), Math.sin(f)];
+          case 4: return [a - S * u, Lb, 0, 1];
+          case 5: f = H + u * H; return [-a + rc * Math.cos(f), a + rc * Math.sin(f), Math.cos(f), Math.sin(f)];
+          case 6: return [-Lb, a - S * u, -1, 0];
+          default: f = Math.PI + u * H; return [-a + rc * Math.cos(f), -a + rc * Math.sin(f), Math.cos(f), Math.sin(f)];
+        }
+      };
+      const hs = [[rr.uniform(300, 450) * msc, 0.45], [rr.uniform(140, 220) * msc, 0.5], [rr.uniform(70, 110) * msc, 0.4], [rr.uniform(35, 55) * msc, 0.2]].map(([l, w]) => [Math.max(2, Math.round(P / l)), w, rr.uniform(0, 6.2832)]);
+      const s0 = rr.uniform(0, P), n = Math.ceil(P / 2), pts = [];
+      for (let q = 0; q < n; q++) {
+        const s = q / n * P;
+        let w = 0; for (const [kk, ww2, ph] of hs) w += ww2 * Math.sin(6.2832 * kk * s / P + ph);
+        const off = amp * clamp(w, -1, 1), [x, z, nx, nz] = pa(s + s0);
+        pts.push([clamp(x + nx * off, -lim, lim), clamp(z + nz * off, -lim, lim)]);
+      }
+      pts.push([pts[0][0], pts[0][1]]);   // fermeture
+      return pts;
+    };
+    // rivière secondaire : part de l'anneau et y retourne ; refusée si elle longe une autre rivière, sort de l'anneau ou se croise mal
+    const validateSec = (pts, A, B, minD) => {
+      const z2 = (30 * msc) ** 2, cross = [];
+      for (let i = 0; i < pts.length - 1; i++) for (let e = 1; e < riverPaths.length; e++) {
+        const ex = riverPaths[e];
+        for (let j = 0; j < ex.length - 1; j++) {
+          if (Math.abs(pts[i][0] - ex[j][0]) > 6 || Math.abs(pts[i][1] - ex[j][1]) > 6) continue;
+          const h = segInt(pts[i], pts[i + 1], ex[j], ex[j + 1]); if (!h) continue;
+          const ta = tang(pts, i), tb = tang(ex, j);
+          cross.push({ i, x: h[0], z: h[1], c: Math.abs(ta[0] * tb[0] + ta[1] * tb[1]) });
+        }
+      }
+      cross.sort((a, b) => a.i - b.i);
+      const cs = [];
+      for (const c of cross) if (!cs.length || Math.hypot(c.x - cs[cs.length - 1].x, c.z - cs[cs.length - 1].z) > 6) cs.push(c);
+      if (cs.length > 2) return null;
+      for (let q = 0; q < cs.length; q++) {
+        if (cs[q].c > 0.5) return null;   // croisements presque perpendiculaires
+        if (q && Math.hypot(cs[q].x - cs[q - 1].x, cs[q].z - cs[q - 1].z) < 30 * msc) return null;
+      }
+      const m2 = minD * minD;
+      for (let k = 0; k < pts.length; k += 2) {
+        const x = pts[k][0], z = pts[k][1];
+        if ((x - A[0]) ** 2 + (z - A[1]) ** 2 < z2 || (x - B[0]) ** 2 + (z - B[1]) ** 2 < z2) continue;   // abords de la jonction
+        if (cs.some(c => (x - c.x) ** 2 + (z - c.z) ** 2 < z2)) continue;
+        for (const ex of riverPaths) for (const q of ex) if ((q[0] - x) ** 2 + (q[1] - z) ** 2 < m2) return null;
+      }
+      return pts;
+    };
+    // 1) rivière principale : anneau le long des bords (paysage terrestre) ou autour du massif d'une île (archipel)
+    let mainRing = null;
+    if (land) {   // paysage terrestre : plus d'anneau le long des bords ; chaque rivière traverse la carte d'un bord à l'autre (orientations alternées, croisements à angle droit)
+      for (let k = 0; k < nRiv; k++) {
+        let got = null;
+        for (let tr = 0; tr < 160 && !got; tr++) {
+          const sd0 = (k % 2) + 2 * Math.floor(rr.uniform(0, 2)), u0 = rr.uniform(-0.7, 0.7) * lim, u1 = rr.uniform(-0.7, 0.7) * lim;
+          if (prof.merge && k > 0 && riverPaths.length) {   // affluent : part d'un bord, vise la rivière principale et s'y jette (confluence nette)
+            const mainP = riverPaths[0], T = mainP[Math.floor(rr.uniform(0.2, 0.8) * (mainP.length - 1))];
+            const A = borderPt(Math.floor(rr.uniform(0, 4)), rr.uniform(-0.7, 0.7) * lim);
+            const B = [clamp(T[0] + (T[0] - A[0]) * 0.35, -lim, lim), clamp(T[1] + (T[1] - A[1]) * 0.35, -lim, lim)];
+            if (Math.hypot(B[0] - A[0], B[1] - A[1]) < 0.4 * lim) continue;
+            got = validate(meander(A, B, rr.uniform(8, 16) * msc, 0), false, true, (tr >= 80 ? 9 : 13) * msc);
+            continue;
+          }
+          const pts = meander(borderPt(sd0, u0), borderPt((sd0 + 2) % 4, u1), rr.uniform(14, 26) * msc, 0);
+          got = validate(pts, false, false, (tr >= 80 ? 9 : 13) * msc);
+        }
+        if (got) riverPaths.push(got);
+      }
+    }
+    else for (let tr = 0; tr < 90 && !mainRing; tr++) { const pts = mkLine(0, tr); if (pts) mainRing = validate(pts, true, false, 0); }
+    if (mainRing) riverPaths.push(mainRing);
+    // 2) rivières suivantes : un point de départ sur l'anneau, un point d'arrivée ailleurs sur l'anneau
+    const ring = riverPaths[0], rm = ring ? ring.length - 1 : 0, jn = [];
+    for (let k = 1; !land && k < nRiv && ring; k++) {
+      let got = null;
+      for (let tr = 0; tr < 160 && !got; tr++) {
+        const relax = tr >= 80, minD = (relax ? 9 : 13) * msc, jd = (tr >= 130 ? 20 : relax ? 30 : 48) * msc;   // si la place manque, les jonctions peuvent se rapprocher
+        const i1 = Math.floor(rr.uniform(0, rm)), i2 = (i1 + Math.floor(rr.uniform(0.3, 0.7) * rm)) % rm;
+        const A = ring[i1], B = ring[i2], dx = B[0] - A[0], dz = B[1] - A[1], dl = Math.hypot(dx, dz);
+        if (dl < 0.55 * lim) continue;   // trajet assez long pour traverser l'intérieur
+        if (jn.some(q => Math.hypot(q[0] - A[0], q[1] - A[1]) < jd || Math.hypot(q[0] - B[0], q[1] - B[1]) < jd)) continue;   // jonctions espacées
+        const tA = tang(ring, i1), tB = tang(ring, i2);
+        if (Math.abs((dx * tA[0] + dz * tA[1]) / dl) > 0.87 || Math.abs((dx * tB[0] + dz * tB[1]) / dl) > 0.87) continue;   // pas de jonction rasante (< 30°)
+        got = validateSec(meander(A, B, rr.uniform(8, 16) * msc, 36 * msc), A, B, minD);
+        if (got) jn.push(A, B);
+      }
+      if (got) riverPaths.push(got);
+    }
+    // une rivière qui passe près d'un lac s'y raccorde : si elle ne le traverse pas, un bras part de son point le plus proche vers le lac
+    const nMain = riverPaths.length; nMainRivers = nMain;
+    for (const [lx, lz, lr] of lakes) {
+      let bd = 1e9, bp = null;
+      for (let ri = 0; ri < nMain; ri++) for (const q of riverPaths[ri]) { const d = Math.hypot(q[0] - lx, q[1] - lz); if (d < bd) { bd = d; bp = q; } }
+      if (!bp || bd < lr * 0.7 || bd > lr + 40 * msc) continue;   // déjà traversé, ou trop loin
+      const f = lr * 0.35 / bd, E = [lx + (bp[0] - lx) * f, lz + (bp[1] - lz) * f];
+      if (Math.hypot(E[0] - bp[0], E[1] - bp[1]) < 8) continue;
+      if (!farFrom(linkStarts, bp[0], bp[1], 70 * msc)) continue;   // pas deux raccords au même endroit
+      linkStarts.push(bp); wired.add(lx + ',' + lz);
+      riverPaths.push(meander(bp, E, 2 * msc));
+    }
+  }
+  // Connexion aux parties les plus profondes : en paysage terrestre, lacs et rivières sont reliés par un chenal
+  // aux zones naturellement les plus basses de la carte (cuvettes sous la ligne d'eau).
+  if (deepPts.length) {
+    const dr = makeRng((seed * 104729 + 7) >>> 0), limD = half - 1;
+    const link = (A, B) => {
+      const len = Math.hypot(B[0] - A[0], B[1] - A[1]), n = Math.max(2, Math.ceil(len / 2));
+      const nx = -(B[1] - A[1]) / len, nz = (B[0] - A[0]) / len, ph = dr.uniform(0, 6.28), lw = dr.uniform(35, 60) * msc, am = 2.2 * msc, pts = [];
+      for (let q = 0; q <= n; q++) {
+        const t = q / n, off = am * Math.sin(t * len * 6.2832 / lw + ph) * Math.sin(Math.PI * t);
+        pts.push([clamp(A[0] + (B[0] - A[0]) * t + nx * off, -limD, limD), clamp(A[1] + (B[1] - A[1]) * t + nz * off, -limD, limD)]);
+      }
+      return pts;
+    };
+    const usedT = [];   // cuvettes déjà atteintes par un raccord : une seule connexion par zone profonde
+    const nearest = (x, z) => { let bd = 1e18, bp = null; for (const q of deepPts) { const d = (q[0] - x) ** 2 + (q[1] - z) ** 2; if (d < bd && farFrom(usedT, q[0], q[1], 90 * msc)) { bd = d; bp = q; } } return [Math.sqrt(bd), bp]; };
+    const reach = 110 * msc;
+    for (const [lx, lz, lr] of lakes) {
+      if (wired.has(lx + ',' + lz)) continue;   // déjà raccordé à une rivière
+      const [d, q] = nearest(lx, lz);
+      if (!q || d < lr * 0.9 || d > reach + lr) continue;   // déjà au contact, ou trop loin
+      if (!farFrom(linkStarts, lx, lz, 70 * msc)) continue;
+      linkStarts.push([lx, lz]); usedT.push(q);
+      const f = lr * 0.4 / d;
+      riverPaths.push(link([lx + (q[0] - lx) * f, lz + (q[1] - lz) * f], q));
+    }
+    for (let ri = 0; land && ri < nMainRivers; ri++) {
+      let bd = 1e18, bp = null, bq = null;
+      for (let k = 0; k < riverPaths[ri].length; k += 2) { const pt = riverPaths[ri][k], [d, q] = nearest(pt[0], pt[1]); if (d < bd) { bd = d; bp = pt; bq = q; } }
+      if (!bq || bd < 10 || bd > reach) continue;
+      if (!farFrom(linkStarts, bp[0], bp[1], 70 * msc)) continue;
+      linkStarts.push(bp); usedT.push(bq);
+      riverPaths.push(link(bp, bq));
+    }
+  }
+  const bankN = fbm(5, 87, 2);   // bruit fin : berges des lacs et des rivières
+  for (const [lx, lz, lr] of lakes.concat(ponds)) {
+    // les rivières proches : le lac s'évase vers elles (embouchure) ; berges bruitées et plage de sable autour de l'eau
+    const near = [];
+    for (const pts of riverPaths) for (const q of pts) if (Math.hypot(q[0] - lx, q[1] - lz) < lr * 1.8 + 24) near.push(q);
+    const floor = WL - wd, sh = WL + 0.15;   // sh : sable juste au-dessus de la ligne d'eau
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      const d0 = Math.hypot(xs[c] - lx, xs[r] - lz);
+      if (d0 > lr * 2.2 + 6) continue;
+      const i = r * N + c;
+      let fl = 0;
+      if (near.length) {
+        let m = 1e9;
+        for (const q of near) { const dx = q[0] - xs[c], dz = q[1] - xs[r], dd2 = dx * dx + dz * dz; if (dd2 < m) m = dd2; }
+        fl = ramp(clamp(1 - Math.sqrt(m) / 20, 0, 1));
+      }
+      const dd = (d0 + 3.2 * w2[i] + 1.6 * bankN[i]) / lr - 0.5 * fl;
+      if (dd > 1.7) continue;
+      const tgt = dd < 0.6 ? floor : dd < 0.95 ? floor + (sh - floor) * ramp((dd - 0.6) / 0.35) : sh + 0.35 * clamp((dd - 0.95) / 0.35, 0, 1);
+      const w = dd < 1.25 ? 1 : 1 - ramp(clamp((dd - 1.25) / 0.45, 0, 1));
+      const h0 = H[i];
+      H[i] = h0 * (1 - w) + Math.min(h0, tgt) * w;
+    }
+  }
+  if (riverPaths.length) {
+    const rw = new Float32Array(NN), RAD = 16, FR = 26 * msc;
+    riverW = rw;
+    for (let ri = 0; ri < riverPaths.length; ri++) {
+      const pts = riverPaths[ri];
+      for (let a = 0; a < pts.length; a++) {
+        const px = pts[a][0], pz = pts[a][1];
+        // évasement : la rivière s'élargit à l'approche d'un croisement, d'une confluence ou d'un lac
+        let dm = 1e9;
+        for (let e = 0; e < riverPaths.length; e++) {
+          if (e === ri) continue;
+          for (const q of riverPaths[e]) { const dx = q[0] - px, dz = q[1] - pz; if (dx * dx + dz * dz < dm) dm = dx * dx + dz * dz; }
+        }
+        dm = Math.sqrt(dm);
+        for (const [lx, lz, lr] of lakes) dm = Math.min(dm, Math.max(0, Math.hypot(lx - px, lz - pz) - lr));
+        const fl = ramp(clamp(1 - dm / FR, 0, 1)), rad = (RAD + 6 * fl) * wk, core = (1.2 + 2 * fl) * wk;   // rivières étroites
+        const c0 = clamp(Math.floor((px - rad - X0) / CS), 0, N - 1), c1 = clamp(Math.ceil((px + rad - X0) / CS), 0, N - 1);
+        const r0 = clamp(Math.floor((pz - rad - X0) / CS), 0, N - 1), r1 = clamp(Math.ceil((pz + rad - X0) / CS), 0, N - 1);
+        for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+          const d0 = Math.hypot(xs[c] - px, xs[r] - pz);
+          if (d0 > rad) continue;
+          const i = r * N + c;
+          const d = Math.max(0, d0 + (1.5 * bankN[i] + 0.9 * w2[i]) * (0.7 + 0.5 * fl));   // berges déchiquetées
+          const bw = Math.min(1.8 + 0.5 * Math.max(0, H[i] - WL), 9) * (1 + 0.6 * fl) * wk * clamp(1 + 0.3 * bankN[i], 0.6, 1.4);   // berges d'autant plus larges que le terrain est haut
+          const w = 1 - ramp(clamp((d - core) / bw, 0, 1));
+          if (w > rw[i]) rw[i] = w;
+        }
+      }
+    }
+    const bed = WL - wd;   // profondeur maximale (en amont)
+    for (let i = 0; i < NN; i++) {
+      const w = rw[i] * ramp(clamp((sd[i] + 10) / 6, 0, 1));   // l'embouchure se prolonge en mer jusqu'aux fonds, sans tranchée en pleine mer
+      if (w <= 0) continue;
+      // le lit suit la profondeur de l'océan au bord des côtes : peu profond à l'embouchure (juste sous la ligne d'eau),
+      // il s'approfondit progressivement vers l'intérieur des terres, et en mer il ne dépasse jamais le fond marin
+      const sdi = sd[i], mouth = WL - 0.3;
+      const bedI = sdi >= 0 ? mouth + (bed - mouth) * ramp(clamp(sdi / 18, 0, 1)) : Math.max(bed, Math.min(mouth, 0.05 + sdi * 0.12));
+      if (H[i] > bedI) H[i] = H[i] * (1 - w) + bedI * w;
+    }
+  }
+  // Fin de chaîne (lissage, monde infini, fondu des bords) ; appliquée au terrain creusé et, séparément, au terrain d'origine :
+  // lacs et rivières ne peuvent ainsi que retirer de la matière, jamais en ajouter (résultat = minimum des deux).
+  const finish = (A, useRiver) => {
+    A = gaussian(A, N, 0.8 * SK);
+    // monde infini : tout ce qui est hors des chunks générés est rempli à la hauteur base_h (p.worldH, -6 = océan profond).
+    // Le relief est « posé » sur ce niveau : max lissé entre le terrain et le niveau du monde (les îles restent des reliefs au-dessus).
+    if (!land && WH > -5.99) {
+      const K = 0.6;
+      for (let i = 0; i < NN; i++) {
+        const h = A[i], dd = Math.abs(h - WH), m = h > WH ? h : WH;
+        A[i] = dd < K ? m + (K - dd) * (K - dd) / (4 * K) : m;
+      }
+    }
+    // bords de la carte : le relief rejoint en douceur le niveau du monde infini (base_h) pour que la limite soit invisible.
+    // 1) près des bords, le relief est d'abord lissé (parois et gradins deviennent des pentes douces) ;
+    // 2) il est ensuite ramené vers base_h ; l'eau (rivières, lacs) est épargnée : ni lissée, ni fondue sur toute la largeur, son fond ne remonte que sur ~32 u.
+    const esc = clamp(half / 96, 0.7, 1.3), SMOOTH = 60 * esc, FADE = 44 * esc, FADE_W = 32 * esc, FMAX = Math.max(SMOOTH, FADE, FADE_W);
+    const As = gaussian(gaussian(A, N, 9 * SK), N, 9 * SK);
+    let wB = null;   // masque d'eau (rivières + lacs, légèrement élargi) en paysage terrestre
+    if (useRiver && land) {
+      const wm = new Float32Array(NN);
+      for (let q = 0; q < NN; q++) wm[q] = A[q] < WL + 0.25 ? 1 : 0;
+      wB = gaussian(wm, N, 3 * SK);
+    }
+    for (let r = 0; r < N; r++) {
+      for (let cc = 0; cc < N; cc++) {
+        const d0 = Math.min(cc, N - 1 - cc, r, N - 1 - r) * CS;
+        if (d0 >= FMAX / 0.65) continue;
+        const i = r * N + cc, d = d0 * (1 + 0.35 * edgeWave(xs[cc], xs[r], seed));   // contour ondulé : la largeur du fondu varie le long du bord (nulle au bord même)
+        if (d >= FMAX) continue;
+        const wt = wB ? clamp(wB[i] * 2.2, 0, 1) : 0, rv = Math.max(useRiver && riverW ? riverW[i] : 0, wt);
+        if (d < SMOOTH) { const ws = ramp(1 - d / SMOOTH) * (1 - wt); A[i] = A[i] * (1 - ws) + As[i] * ws; }
+        const w = ramp(clamp(1 - d / FADE, 0, 1)), wr = ramp(clamp(1 - d / FADE_W, 0, 1)), wi = w * (1 - rv) + wr * rv;
+        A[i] = A[i] * (1 - wi) + WH * wi;
+        const gm = 4 * wi * (1 - wi) * (1 - rv);   // grain fin, maximal au milieu du fondu, nul au bord et dans le relief intact (eau épargnée)
+        if (gm > 0) A[i] += edgeGrain(xs[cc], xs[r], seed) * 0.35 * gm;
+      }
+    }
+    return A;
+  };
+  const hasWater = lakes.length || ponds.length || riverPaths.length;
+  H = finish(H, true);
+  if (hasWater) { const Hb = finish(H0, false); for (let i = 0; i < NN; i++) if (H[i] > Hb[i]) H[i] = Hb[i]; }
+  if (prof.flare && hasWater) {   // berges évasées : autour des lacs et rivières, les gradins et parois raides s'adoucissent en pentes douces vers l'eau
+    const wm = new Float32Array(NN);
+    for (let i = 0; i < NN; i++) wm[i] = H[i] < WL + 0.25 ? 1 : 0;
+    const prox = gaussian(wm, N, 40 * SK), Hs = gaussian(gaussian(H, N, 14 * SK), N, 14 * SK);
+    for (let i = 0; i < NN; i++) {
+      if (H[i] <= WL + 0.25) continue;   // l'eau elle-même n'est pas modifiée
+      const w = ramp(clamp(prox[i] * 2.4, 0, 1));
+      if (w <= 0) continue;
+      H[i] = Math.max(H[i] * (1 - w) + Hs[i] * w, WL + 0.3);
+    }
+  }
+  // Pentes douces autour des lacs (tous les modes) : depuis la rive, le terrain monte en rampe régulière (≈ 6° puis un peu plus raide),
+  // raccordée progressivement au relief d'origine sur une quarantaine d'unités ; l'eau et la rive ne sont pas touchées.
+  if (lakes.length) {
+    const E0 = 10 * msc, E1 = 40 * msc, g1 = 0.11, g2 = 0.0015 / msc;
+    for (const [lx, lz, lr] of lakes) {
+      const reach = lr * 1.25 + E0 + E1 + 6;
+      const c0 = clamp(Math.floor((lx - reach - X0) / CS), 0, N - 1), c1 = clamp(Math.ceil((lx + reach - X0) / CS), 0, N - 1);
+      const r0 = clamp(Math.floor((lz - reach - X0) / CS), 0, N - 1), r1 = clamp(Math.ceil((lz + reach - X0) / CS), 0, N - 1);
+      for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) {
+        const i = r * N + c, e = Math.hypot(xs[c] - lx, xs[r] - lz) + 3.2 * w2[i] + 1.6 * bankN[i] - lr * 1.1;   // distance à la rive (berges bruitées comme au creusement)
+        if (e <= 0 || e > E0 + E1) continue;
+        const w = 1 - ramp(clamp((e - E0) / E1, 0, 1));
+        const target = WL + 0.3 + g1 * e + g2 * e * e;
+        if (H[i] > target) H[i] = H[i] * (1 - w) + target * w;
+      }
+    }
+  }
+  // Plage autour des points d'eau (lacs et rivières) : bande de terrain plat et bas, juste au-dessus de l'eau (sable), de largeur réglable,
+  // qui remonte ensuite en douceur vers le relief d'origine.
+  const BW = clamp(Number.isFinite(p.beach) ? p.beach : 0, 0, 10);
+  if (BW > 0) {   // tous les modes : lacs, rivières et cuvettes naturelles en paysage terrestre, lacs, rivières et côtes de la mer en archipel
+    const dist = new Float32Array(NN).fill(1e9);
+    for (let i = 0; i < NN; i++) if (H[i] < WL + 0.25) dist[i] = 0;
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {   // distance au plus proche point d'eau (transformée en chanfrein, deux passes)
+      const i = r * N + c; let d = dist[i];
+      if (c > 0 && dist[i - 1] + 1 < d) d = dist[i - 1] + 1;
+      if (r > 0) {
+        if (dist[i - N] + 1 < d) d = dist[i - N] + 1;
+        if (c > 0 && dist[i - N - 1] + 1.414 < d) d = dist[i - N - 1] + 1.414;
+        if (c < N - 1 && dist[i - N + 1] + 1.414 < d) d = dist[i - N + 1] + 1.414;
+      }
+      dist[i] = d;
+    }
+    for (let r = N - 1; r >= 0; r--) for (let c = N - 1; c >= 0; c--) {
+      const i = r * N + c; let d = dist[i];
+      if (c < N - 1 && dist[i + 1] + 1 < d) d = dist[i + 1] + 1;
+      if (r < N - 1) {
+        if (dist[i + N] + 1 < d) d = dist[i + N] + 1;
+        if (c < N - 1 && dist[i + N + 1] + 1.414 < d) d = dist[i + N + 1] + 1.414;
+        if (c > 0 && dist[i + N - 1] + 1.414 < d) d = dist[i + N - 1] + 1.414;
+      }
+      dist[i] = d;
+    }
+    for (let i = 0; i < NN; i++) {
+      if (H[i] <= WL + 0.25) continue;
+      const e = dist[i] * CS + 0.8 * bankN[i];
+      if (e >= BW * 1.6) continue;
+      const w = 1 - ramp(clamp((e - BW * 0.6) / (BW), 0, 1));   // plage pleine sur 60 % de la largeur, puis raccord progressif
+      const target = WL + 0.12 + 0.02 * Math.max(e, 0);
+      if (H[i] > target) H[i] = H[i] * (1 - w) + target * w;
+    }
+  }
+  // Fissures et crevasses (Plateau), canyons (Hautes terres) : entailles à parois raides creusées après le lissage, fond toujours au-dessus de l'eau.
+  // Générateur à part : le reste de la carte n'est pas modifié.
+  const nFiss = land ? clamp(Math.round(p.fissures || 0), 0, 10) : 0, nCrev = land ? clamp(Math.round(p.crevasses || 0), 0, 30) : 0, nCany = land ? clamp(Math.round(p.canyons || 0), 0, 6) : 0;
+  if (nFiss + nCrev + nCany > 0) {
+    const cr = makeRng((seed * 15485863 + 29) >>> 0), limC = half - 10;
+    const cw = new Float32Array(NN), cabs = new Float32Array(NN).fill(-1e9), crel = new Float32Array(NN);   // poids, fond absolu (canyon), profondeur relative (fissure)
+    const fwk = clamp(Number.isFinite(p.fissureWidth) ? p.fissureWidth : 1, 0.4, 3) * msc, cdp = clamp(Number.isFinite(p.canyonDepth) ? p.canyonDepth : 12, 2, 30);
+    // tracé sinueux de A vers B ; l'ondulation s'annule aux extrémités si taper > 0
+    const wind = (A, B, amp, taper, step, jag) => {
+      const len = Math.hypot(B[0] - A[0], B[1] - A[1]) || 1, n = Math.max(2, Math.ceil(len / step));
+      const nx = -(B[1] - A[1]) / len, nz = (B[0] - A[0]) / len;
+      const l0 = cr.uniform(160, 260) * msc, l1 = cr.uniform(60, 100) * msc, l2 = cr.uniform(18, 32) * msc, p0 = cr.uniform(0, 6.28), p1 = cr.uniform(0, 6.28), p2 = cr.uniform(0, 6.28);
+      const a0 = amp * cr.uniform(0.8, 1.2), a1 = amp * cr.uniform(0.4, 0.7), a2 = amp * jag, pts = [];
+      for (let q = 0; q <= n; q++) {
+        const t = q / n, s2 = t * len;
+        let off = a0 * Math.sin(s2 * 6.2832 / l0 + p0) + a1 * Math.sin(s2 * 6.2832 / l1 + p1) + a2 * Math.sin(s2 * 6.2832 / l2 + p2);
+        if (taper) { const e = clamp(Math.min(s2, len - s2) / taper, 0, 1); off *= e * e * (3 - 2 * e); }
+        pts.push([clamp(A[0] + (B[0] - A[0]) * t + nx * off, -limC, limC), clamp(A[1] + (B[1] - A[1]) * t + nz * off, -limC, limC)]);
+      }
+      return pts;
+    };
+    // creuse un tracé : wf = facteur de largeur par point (0 – 1), floorAbs = fond absolu par point (canyon) sinon profondeur relative dRel
+    const cut = (pts, wf, core, bw, floorAbs, dRel, rag) => {
+      for (let a = 0; a < pts.length; a++) {
+        const f = wf[a]; if (f <= 0.02) continue;
+        const c0r = core * f, bwr = bw * (0.5 + 0.5 * f), rad = c0r + bwr + rag * 1.2, px = pts[a][0], pz = pts[a][1];
+        const cA = clamp(Math.floor((px - rad - X0) / CS), 0, N - 1), cB = clamp(Math.ceil((px + rad - X0) / CS), 0, N - 1);
+        const rA = clamp(Math.floor((pz - rad - X0) / CS), 0, N - 1), rB = clamp(Math.ceil((pz + rad - X0) / CS), 0, N - 1);
+        for (let r = rA; r <= rB; r++) for (let c = cA; c <= cB; c++) {
+          const i = r * N + c, d = Math.max(0, Math.hypot(xs[c] - px, xs[r] - pz) + rag * bankN[i]);   // parois irrégulières
+          if (d > c0r + bwr) continue;
+          const w = (1 - ramp(clamp((d - c0r) / bwr, 0, 1))) * clamp(f * 2, 0, 1);
+          if (w > cw[i]) { cw[i] = w; cabs[i] = floorAbs ? floorAbs[a] : -1e9; crel[i] = dRel; }
+        }
+      }
+    };
+    const ptAt = (x, z) => H[clamp(Math.round((z - X0) / CS), 0, N - 1) * N + clamp(Math.round((x - X0) / CS), 0, N - 1)];
+    // --- fissures : un réseau ; la première traverse la carte, les suivantes partent d'une fissure existante et rejoignent une autre (ou finissent en cul-de-sac)
+    const fp = [];
+    for (let k = 0; k < nFiss; k++) {
+      let pts = null, joined = false;
+      if (!fp.length) {
+        const A = [cr.uniform(-0.55, 0.55) * limC, cr.uniform(-0.55, 0.55) * limC], th = cr.uniform(0, 6.2832), L = cr.uniform(1.0, 1.5) * half;
+        const B = [clamp(A[0] + Math.cos(th) * L, -limC, limC), clamp(A[1] + Math.sin(th) * L, -limC, limC)];
+        pts = wind(A, B, 9 * msc, 20 * msc, 1, 0.3);
+      } else {
+        for (let tr = 0; tr < 40 && !pts; tr++) {
+          const pa = fp[Math.floor(cr.uniform(0, fp.length))], ia = Math.floor(cr.uniform(0.1, 0.9) * pa.length), A = pa[ia];
+          if (cr.uniform(0, 1) < 0.65) {   // rejoint une fissure (éventuellement la même, plus loin)
+            const pb = fp[Math.floor(cr.uniform(0, fp.length))], ib = Math.floor(cr.uniform(0.1, 0.9) * pb.length), B = pb[ib], dl = Math.hypot(B[0] - A[0], B[1] - A[1]);
+            if (dl < 0.3 * half || dl > 1.2 * half || (pa === pb && Math.abs(ia - ib) < 0.25 * pa.length)) continue;
+            pts = wind(A, B, 7 * msc, 20 * msc, 1, 0.3); joined = true;
+          } else {   // branche à angle franc, qui s'éteint
+            const a0 = pa[Math.max(ia - 3, 0)], a1 = pa[Math.min(ia + 3, pa.length - 1)], ang = Math.atan2(a1[1] - a0[1], a1[0] - a0[0]) + (cr.uniform(0, 1) < 0.5 ? -1 : 1) * cr.uniform(0.9, 1.5), L = cr.uniform(0.25, 0.5) * half;
+            const B = [clamp(A[0] + Math.cos(ang) * L, -limC, limC), clamp(A[1] + Math.sin(ang) * L, -limC, limC)];
+            if (Math.hypot(B[0] - A[0], B[1] - A[1]) < 0.15 * half) continue;
+            pts = wind(A, B, 5 * msc, 12 * msc, 1, 0.3);
+          }
+        }
+      }
+      if (!pts) continue;
+      fp.push(pts);
+      const n = pts.length, ph = cr.uniform(0, 6.28), wf = new Float32Array(n);
+      for (let a = 0; a < n; a++) {
+        const t = a / (n - 1), v = 0.85 + 0.15 * Math.sin(t * 6.2832 * 3 + ph);   // largeur qui varie le long du tracé
+        const head = k === 0 ? Math.min(1, t / 0.15) : 1, tail = joined ? 1 : Math.min(1, (1 - t) / 0.3);   // extrémités libres : la fissure se referme
+        wf[a] = v * Math.pow(Math.min(head, tail), 0.7) * (k === 0 ? Math.min(1, (1 - t) / 0.15) ** 0.7 : 1);
+      }
+      cut(pts, wf, 0.8 * fwk, 0.8 + 0.25 * fwk, null, 4, 0.6 * Math.min(fwk, 2));
+    }
+    // --- crevasses : fentes courtes, étroites et profondes, en fuseau
+    for (let k = 0; k < nCrev; k++) {
+      const cx = cr.uniform(-0.9, 0.9) * limC, cz = cr.uniform(-0.9, 0.9) * limC, th = cr.uniform(0, 6.2832), L = cr.uniform(14, 42) * msc;
+      const A = [cx - Math.cos(th) * L / 2, cz - Math.sin(th) * L / 2], B = [cx + Math.cos(th) * L / 2, cz + Math.sin(th) * L / 2];
+      const pts = wind(A, B, 2.5 * msc, L * 0.3, 1, 0.2), wf = new Float32Array(pts.length);
+      for (let a = 0; a < pts.length; a++) wf[a] = Math.pow(Math.sin(Math.PI * a / (pts.length - 1)), 0.7);
+      cut(pts, wf, 0.6 * Math.sqrt(msc), 0.7, null, 14, 0);
+    }
+    // --- canyons : longs tracés sinueux d'un bord à l'autre ; le fond suit doucement le terrain (moyenne glissante) moins la profondeur choisie
+    const cp = [];
+    for (let k = 0; k < nCany; k++) {
+      let pts = null;
+      for (let tr = 0; tr < 120 && !pts; tr++) {
+        const sep = (tr < 60 ? 2.2 : 1.5) * (4.5 * msc + 2 + 0.2 * cdp);   // deux canyons ne se longent pas à moins de ~2 largeurs (moins si la place manque)
+        const sd0 = (k % 2) * 1 + 2 * Math.floor(cr.uniform(0, 2)), u0 = cr.uniform(-0.7, 0.7) * limC, u1 = cr.uniform(-0.7, 0.7) * limC;   // orientations alternées : les canyons se croisent plutôt que de se longer
+        const bp = (sdx, u) => sdx === 0 ? [u, -limC] : sdx === 1 ? [limC, u] : sdx === 2 ? [u, limC] : [-limC, u];
+        const cand = wind(bp(sd0, u0), bp((sd0 + 2) % 4, u1), 28 * msc, 0, 2, 0.12);
+        let bad = false;   // pas de tracé presque parallèle à un autre canyon
+        for (let a = 4; a < cand.length - 4 && !bad; a += 4) {
+          const ta = [cand[a + 3][0] - cand[a - 3][0], cand[a + 3][1] - cand[a - 3][1]], la = Math.hypot(ta[0], ta[1]) || 1;
+          for (const ex of cp) for (let j = 4; j < ex.length - 4; j += 4) {
+            if ((ex[j][0] - cand[a][0]) ** 2 + (ex[j][1] - cand[a][1]) ** 2 > sep * sep) continue;
+            const tb = [ex[j + 3][0] - ex[j - 3][0], ex[j + 3][1] - ex[j - 3][1]], lb = Math.hypot(tb[0], tb[1]) || 1;
+            if (Math.abs(ta[0] * tb[0] + ta[1] * tb[1]) / (la * lb) > 0.7) { bad = true; break; }
+          }
+        }
+        if (!bad) pts = cand;
+      }
+      if (!pts) continue;
+      cp.push(pts);
+      const n = pts.length, g = pts.map(q => ptAt(q[0], q[1])), fl = new Float32Array(n), wf = new Float32Array(n), W = 30, ph = cr.uniform(0, 6.28);
+      for (let a = 0; a < n; a++) {
+        let sum = 0, m = 0; for (let b = Math.max(0, a - W); b <= Math.min(n - 1, a + W); b++) { sum += g[b]; m++; }
+        fl[a] = sum / m - cdp;
+        wf[a] = 0.8 + 0.2 * Math.sin(a / n * 6.2832 * 4 + ph);
+      }
+      cut(pts, wf, 4.5 * msc, 2 + 0.2 * cdp, fl, 0, 2.2);
+    }
+    for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+      const i = r * N + c; let w = cw[i]; if (w <= 0) continue;
+      w *= ramp(clamp((Math.min(c, N - 1 - c, r, N - 1 - r) * CS - 8) / 44, 0, 1));   // pas d'entaille au bord : raccord invisible avec le monde infini
+      if (w <= 0) continue;
+      const fl = Math.max(cabs[i] > -1e8 ? cabs[i] : H[i] - crel[i], WL + 1.0);   // le fond reste au-dessus de l'eau
+      if (H[i] > fl) H[i] = H[i] * (1 - w) + fl * w;
+    }
+  }
+  let maxH = -99;
+  for (let i = 0; i < NN; i++) {
+    let v = clamp(H[i], -6, 30);
+    if ((!land && Math.abs(v - WH) < 0.02) || (WH <= -5.99 && v < -5.9)) v = WH;
+    H[i] = v;
+    if (v > maxH) maxH = v;
+  }
+
+  await stage(0.8, 'Végétation');
+  const sample2 = (arr, x, z) => {
+    const c = clamp((x - X0) / CS, 0, N - 1), r = clamp((z - X0) / CS, 0, N - 1);
+    const c0 = Math.floor(c), r0 = Math.floor(r);
+    const c1 = Math.min(c0 + 1, N - 1), r1 = Math.min(r0 + 1, N - 1);
+    const fc = c - c0, fr = r - r0;
+    return (arr[r0 * N + c0] * (1 - fc) + arr[r0 * N + c1] * fc) * (1 - fr)
+      + (arr[r1 * N + c0] * (1 - fc) + arr[r1 * N + c1] * fc) * fr;
+  };
+  const hat = (x, z) => sample2(H, x, z);
+  const slope = (x, z) => Math.hypot(hat(x + 1, z) - hat(x - 1, z), hat(x, z + 1) - hat(x, z - 1)) / 2;
+  const forest = fbm(22, 41, 3), flowers = fbm(14, 43, 2), stones = fbm(10, 45, 2);
+  const nz = (arr, x, z) => sample2(arr, x, z);
+  const props = [], grid = new Map();
+  let nid = 1;
+  const free = (x, z, r) => {
+    const gx = Math.floor(x / 3), gz = Math.floor(z / 3);
+    for (let i = gx - 1; i <= gx + 1; i++) for (let j = gz - 1; j <= gz + 1; j++) {
+      const cell = grid.get(i + ',' + j);
+      if (!cell) continue;
+      for (const [px, pz, pr] of cell) if ((px - x) ** 2 + (pz - z) ** 2 < (r + pr) ** 2) return false;
+    }
+    return true;
+  };
+  const add = (k, x, z, r) => {
+    const key = Math.floor(x / 3) + ',' + Math.floor(z / 3);
+    if (!grid.has(key)) grid.set(key, []);
+    grid.get(key).push([x, z, r]);
+    props.push({
+      a: +rng.uniform(-Math.PI, Math.PI).toFixed(3), id: nid, k,
+      s: +rng.uniform(0.85, 1.2).toFixed(3), v: rng.int(0, 4),
+      x: +x.toFixed(3), z: +z.toFixed(3)
+    });
+    nid += 7;
+  };
+  const lo = xs[0] + 2, hi = xs[N - 1] - 2;
+  const sampleN = (n, fn, m = 1) => {
+    let got = 0, tries = 0;
+    n = Math.floor(n * m);
+    while (got < n && tries < 400000) {
+      tries++;
+      const x = rng.uniform(lo, hi), z = rng.uniform(lo, hi);
+      const h = hat(x, z);
+      if (h >= 0.9 && fn(x, z, h)) got++;
+    }
+  };
+  let landCells = 0;
+  for (let i = 0; i < NN; i++) if (H[i] > 0.9) landCells++;
+  const kk = landCells * CS * CS / 19500.0 * (land ? 0.7 : 1);
+  const dec = ['tree', 'oak', 'beech', 'birch', 'maple', 'tree', 'oak', 'birch', 'beech'];
+  const fruit = ['apple', 'cherry', 'poplar', 'old_oak'];
+  const R = rng.random;
+
+  const fDec = (x, z, h) => {
+    if (h > 7.0) return false;
+    if (h > 5 && R() > (7 - h) / 2) return false;
+    const f = nz(forest, x, z);
+    if (f < 0.1 || R() > 0.12 + 0.35 * Math.min(1, Math.max(0, f))) return false;
+    if (slope(x, z) > 0.9 || !free(x, z, 2.6)) return false;
+    add(R() < 0.05 ? rng.choice(fruit) : rng.choice(dec), x, z, 2.6); return true;
+  };
+  const fCon = (x, z, h) => {
+    if (h < 7.5 || h > 19) return false;
+    const pr = Math.min(1, (h - 7.5) / 3) * Math.min(1, (19 - h) / 4);
+    if (R() > pr * (0.25 + 0.3 * Math.max(0, nz(forest, x, z)))) return false;
+    if (slope(x, z) > 1.2 || !free(x, z, 2.4)) return false;
+    add(h < 13 ? rng.choice(['pine', 'pine', 'spruce', 'fir', 'stone_pine']) : rng.choice(['spruce', 'fir', 'pine']), x, z, 2.4);
+    return true;
+  };
+  const fBush = (x, z, h) => {
+    if (h > 7 || !free(x, z, 1.5)) return false;
+    add(rng.choice(['bush', 'bush', 'sapling']), x, z, 1.5); return true;
+  };
+  const fFlow = (x, z, h) => {
+    if (h > 6.5 || slope(x, z) > 0.7) return false;
+    if (nz(flowers, x, z) < 0 && R() > 0.15) return false;
+    if (!free(x, z, 0.9)) return false;
+    add(rng.choice(['daisy', 'poppy', 'bluebell', 'meadow', 'meadow', 'daisy', R() < 0.05 ? 'sunflower' : 'bluebell']), x, z, 0.9);
+    return true;
+  };
+  const fStone = (x, z, h) => {
+    if (h > 9 || !free(x, z, 4.0)) return false;
+    if (R() > (h < 2.2 ? 0.4 : 0.3 + 0.3 * nz(stones, x, z))) return false;
+    add('boulder', x, z, 1.0); return true;
+  };
+  const fSnag = (x, z, h) => {
+    if (h < 2 || h > 9 || !free(x, z, 1.2)) return false;
+    add('snag', x, z, 1.2); return true;
+  };
+  sampleN(380 * kk, fDec, p.leaf); await stage(0.86, 'Végétation');
+  sampleN(260 * kk, fCon, p.pine); await stage(0.9, 'Végétation');
+  sampleN(90 * kk, fBush, p.bush); sampleN(320 * kk, fFlow, p.flower); await stage(0.95, 'Végétation');
+  sampleN(60 * kk, fStone, p.rock); sampleN(5 * kk, fSnag);
+
+  return {
+    H, N, half, A0, A1, X0, xs, big, small, props, seed, scale: pl.scale, nextId: nid + 10,
+    name: p.name, season: p.season, maxH, worldH: WH, land, lakes, rivers: nMainRivers, ms: Date.now() - t0
+  };
+}
+
+async function zlibB64(f32) {
+  const stream = new Blob([f32]).stream().pipeThrough(new CompressionStream('deflate'));
+  const buf = new Uint8Array(await new Response(stream).arrayBuffer());
+  let s = '';
+  for (let i = 0; i < buf.length; i += 0x8000) s += String.fromCharCode.apply(null, buf.subarray(i, i + 0x8000));
+  return btoa(s);
+}
+
+const ORIENTS = [
+  (i, j, N) => [i, j],
+  (i, j, N) => [j, i],
+  (i, j, N) => [i, N - 1 - j],
+  (i, j, N) => [N - 1 - i, j],
+  (i, j, N) => [N - 1 - i, N - 1 - j],
+  (i, j, N) => [j, N - 1 - i],
+  (i, j, N) => [N - 1 - j, i],
+  (i, j, N) => [N - 1 - j, N - 1 - i]
+];
+async function buildJSON(res, progress, orient = 0) {
+  const { H, N, A0, A1 } = res;
+  const om = ORIENTS[orient] || ORIENTS[0];
+  const terrain = {};
+  const total = (A1 - A0 + 1) ** 2;
+  let n = 0;
+  for (let ca = A0; ca <= A1; ca++) {
+    for (let cb = A0; cb <= A1; cb++) {
+      const chunk = new Float32Array(CH * CH);
+      let any = false;
+      for (let r = 0; r < CH; r++) {
+        const gi = (cb - A0) * CH + r, gj0 = (ca - A0) * CH;
+        for (let c = 0; c < CH; c++) {
+          const [si, sj] = om(gi, gj0 + c, N);
+          const v = H[si * N + sj];
+          chunk[r * CH + c] = v;
+          if (Math.abs(v - res.worldH) > 0.01) any = true;
+        }
+      }
+      if (any) terrain[ca + ',' + cb] = await zlibB64(chunk);
+      if (++n % 40 === 0) { progress && progress(n / total); await tick(); }
+    }
+  }
+  const F = v => Number.isInteger(v) ? '__F__' + v : v;
+  const props = res.props.map(q => ({ a: F(q.a), id: F(q.id), k: q.k, s: F(q.s), v: F(q.v), x: F(q.x), z: F(q.z) }));
+  const data = {
+    base_h: F(res.worldH), bases: {}, decor_off: [], fields: [], houses: [], name: res.name,
+    next_id: F(res.nextId), props, river_seed: F(-1), season: F(res.season),
+    terrain2: terrain, terrain_rev: F(1), towers: [], version: F(2), walls: []
+  };
+  const text = JSON.stringify(data).replace(/"__F__(-?\d+)"/g, '$1.0');
+  return { text, chunks: Object.keys(terrain).length };
+}
+
+</script>
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const pct = v => Math.round(v * 100) + ' %';
+  const LANGS = [['fr', 'Français'], ['en', 'English'], ['tr', 'Türkçe'], ['es', 'Español'], ['de', 'Deutsch']];
+  const KEYS = ["Génère un archipel pour Kalecik.", "Végétation", "Afficher la végétation", "Aperçu automatique", "Plein écran", "Préparation", "Côtes", "Montagnes", "Relief", "Terrain", "Compression des chunks", "Réglages", "Préréglages", "Graine", "Au hasard", "Saison enregistrée", "Nom de la carte", "Générer", "Enregistrer le JSON", "Archipel", "Nature", "Avancé", "Grandes îles", "Îlots", "Taille de la carte", "Écart entre les îles", "Bruit des côtes", "Hauteur des sommets", "Surface des montagnes", "Bruit des sommets", "Feuillus", "Pins", "Buissons", "Fleurs", "Rochers", "Taille des grandes îles", "Taille des îlots", "Équilibré", "Montagneux", "Grand archipel", "Petite île", "Graine {0} · {1} grandes îles + {2} îlots", "{0} arbres (dont {1} conifères) · {2} fleurs · {3} rochers", "Carte {0}×{0} {3} · sommet {1} {3} · {2} s", "Carte enregistrée : {0}", "Enregistrement indisponible ici : JSON copié dans le presse-papiers.", "Enregistrement indisponible dans cette vue.", "Enregistrement annulé.", "L'enregistrement a échoué.", "La génération a échoué.", "Aucune carte à enregistrer.", "Langue", "Enregistrer l'image", "Image enregistrée : {0}", "Aucune image à enregistrer.", "Aléatoire", "Personnalisé", "Très léger", "Léger", "Moyen", "Lourd", "Très lourd", "Zones plates côtières", "Par défaut", "Îles réduites à {0} % pour tenir dans la carte", "Neige", "Unité de mesure", "Automatique", "Mètres (m)", "Pieds (ft)", "Hauteur du monde infini", "Océan", "Monde infini à {0}", "Nouvelle carte", "Choisissez la hauteur du monde. Sous le niveau de l'eau, le générateur crée un archipel ; au-dessus, un paysage terrestre.", "Paysage terrestre", "Valider", "Rivage", "Plaine", "Plateau", "Hautes terres", "Paysage", "Massifs", "Lacs", "Graine {0} · {1} massifs + {2} lacs", "Monde", "Rivières", "Profondeur des points d'eau", "{0} rivières", "Largeur des points d'eau", "{0} lacs", "Fissures", "Largeur des fissures", "Crevasses", "Canyons", "Profondeur des canyons", "Plage", "Annuler"];
+  const TR = {"en": ["Generate an archipelago for Kalecik.", "Vegetation", "Show vegetation", "Auto preview", "Fullscreen", "Preparing", "Coasts", "Mountains", "Relief", "Terrain", "Compressing chunks", "Settings", "Presets", "Seed", "Random", "Saved season", "Map name", "Generate", "Save JSON", "Archipelago", "Nature", "Advanced", "Large islands", "Islets", "Map size", "Gap between islands", "Coast noise", "Peak height", "Mountain area", "Peak noise", "Deciduous trees", "Pines", "Bushes", "Flowers", "Rocks", "Large island size", "Islet size", "Balanced", "Mountainous", "Large archipelago", "Small island", "Seed {0} · {1} large islands + {2} islets", "{0} trees ({1} conifers) · {2} flowers · {3} rocks", "Map {0}×{0} {3} · peak {1} {3} · {2} s", "Map saved: {0}", "Saving unavailable here: JSON copied to clipboard.", "Saving unavailable in this view.", "Saving cancelled.", "Saving failed.", "Generation failed.", "No map to save.", "Language", "Save image", "Image saved: {0}", "No image to save.", "Random", "Custom", "Very light", "Light", "Medium", "Heavy", "Very heavy", "Flat coastal areas", "Default", "Islands scaled down to {0} % to fit the map", "Snow", "Unit of measure", "Automatic", "Meters (m)", "Feet (ft)", "Infinite world height", "Ocean", "Infinite world at {0}", "New map", "Choose the height of the world. Below the water level the generator builds an archipelago; above it, a land landscape.", "Land landscape", "Confirm", "Shore", "Plain", "Plateau", "Highlands", "Landscape", "Massifs", "Lakes", "Seed {0} · {1} massifs + {2} lakes", "World", "Rivers", "Water body depth", "{0} rivers", "Water body width", "{0} lakes", "Fissures", "Fissure width", "Crevasses", "Canyons", "Canyon depth", "Beach", "Cancel"], "tr": ["Kalecik için bir takımada oluştur.", "Bitki örtüsü", "Bitki örtüsünü göster", "Otomatik önizleme", "Tam ekran", "Hazırlanıyor", "Kıyılar", "Dağlar", "Rölyef", "Arazi", "Parçalar sıkıştırılıyor", "Ayarlar", "Hazır ayarlar", "Tohum", "Rastgele", "Kayıtlı mevsim", "Harita adı", "Oluştur", "JSON'u kaydet", "Takımada", "Doğa", "Gelişmiş", "Büyük adalar", "Adacıklar", "Harita boyutu", "Adalar arası mesafe", "Kıyı gürültüsü", "Zirve yüksekliği", "Dağ alanı", "Zirve gürültüsü", "Yaprak döken ağaçlar", "Çamlar", "Çalılar", "Çiçekler", "Kayalar", "Büyük ada boyutu", "Adacık boyutu", "Dengeli", "Dağlık", "Büyük takımada", "Küçük ada", "Tohum {0} · {1} büyük ada + {2} adacık", "{0} ağaç ({1} iğne yapraklı) · {2} çiçek · {3} kaya", "Harita {0}×{0} {3} · zirve {1} {3} · {2} sn", "Harita kaydedildi: {0}", "Burada kaydetme kullanılamıyor: JSON panoya kopyalandı.", "Bu görünümde kaydetme kullanılamıyor.", "Kaydetme iptal edildi.", "Kaydetme başarısız oldu.", "Oluşturma başarısız oldu.", "Kaydedilecek harita yok.", "Dil", "Görseli kaydet", "Görsel kaydedildi: {0}", "Kaydedilecek görsel yok.", "Rastgele", "Özel", "Çok hafif", "Hafif", "Orta", "Ağır", "Çok ağır", "Düz kıyı alanları", "Varsayılan", "Adalar haritaya sığması için %{0} oranında küçültüldü", "Kar", "Ölçü birimi", "Otomatik", "Metre (m)", "Fit (ft)", "Sonsuz dünya yüksekliği", "Okyanus", "Sonsuz dünya: {0}", "Yeni harita", "Dünyanın yüksekliğini seçin. Su seviyesinin altında oluşturucu bir takımada, üstünde ise karasal bir manzara üretir.", "Karasal manzara", "Onayla", "Kıyı", "Ova", "Plato", "Yaylalar", "Manzara", "Masifler", "Göller", "Tohum {0} · {1} masif + {2} göl", "Dünya", "Nehirler", "Su kütlelerinin derinliği", "{0} nehir", "Su kütlelerinin genişliği", "{0} göl", "Çatlaklar", "Çatlak genişliği", "Yarıklar", "Kanyonlar", "Kanyon derinliği", "Plaj", "İptal"], "es": ["Genera un archipiélago para Kalecik.", "Vegetación", "Mostrar la vegetación", "Vista previa automática", "Pantalla completa", "Preparando", "Costas", "Montañas", "Relieve", "Terreno", "Comprimiendo chunks", "Ajustes", "Preajustes", "Semilla", "Aleatorio", "Temporada guardada", "Nombre del mapa", "Generar", "Guardar el JSON", "Archipiélago", "Naturaleza", "Avanzado", "Islas grandes", "Islotes", "Tamaño del mapa", "Separación entre islas", "Ruido de las costas", "Altura de las cumbres", "Superficie de las montañas", "Ruido de las cumbres", "Árboles de hoja caduca", "Pinos", "Arbustos", "Flores", "Rocas", "Tamaño de las islas grandes", "Tamaño de los islotes", "Equilibrado", "Montañoso", "Gran archipiélago", "Isla pequeña", "Semilla {0} · {1} islas grandes + {2} islotes", "{0} árboles ({1} coníferas) · {2} flores · {3} rocas", "Mapa {0}×{0} {3} · cumbre {1} {3} · {2} s", "Mapa guardado: {0}", "Guardado no disponible aquí: JSON copiado al portapapeles.", "Guardado no disponible en esta vista.", "Guardado cancelado.", "Error al guardar.", "Error en la generación.", "No hay ningún mapa que guardar.", "Idioma", "Guardar la imagen", "Imagen guardada: {0}", "No hay ninguna imagen que guardar.", "Aleatorio", "Personalizado", "Muy ligero", "Ligero", "Medio", "Pesado", "Muy pesado", "Zonas llanas costeras", "Predeterminado", "Islas reducidas al {0} % para caber en el mapa", "Nieve", "Unidad de medida", "Automática", "Metros (m)", "Pies (ft)", "Altura del mundo infinito", "Océano", "Mundo infinito a {0}", "Nuevo mapa", "Elige la altura del mundo. Por debajo del nivel del agua, el generador crea un archipiélago; por encima, un paisaje terrestre.", "Paisaje terrestre", "Confirmar", "Costa", "Llanura", "Meseta", "Tierras altas", "Paisaje", "Macizos", "Lagos", "Semilla {0} · {1} macizos + {2} lagos", "Mundo", "Ríos", "Profundidad de las masas de agua", "{0} ríos", "Anchura de las masas de agua", "{0} lagos", "Fisuras", "Anchura de las fisuras", "Grietas", "Cañones", "Profundidad de los cañones", "Playa", "Cancelar"], "de": ["Erzeuge einen Archipel für Kalecik.", "Vegetation", "Vegetation anzeigen", "Automatische Vorschau", "Vollbild", "Vorbereitung", "Küsten", "Berge", "Relief", "Gelände", "Chunks werden komprimiert", "Einstellungen", "Voreinstellungen", "Seed", "Zufall", "Gespeicherte Saison", "Kartenname", "Erzeugen", "JSON speichern", "Archipel", "Natur", "Erweitert", "Große Inseln", "Inselchen", "Kartengröße", "Abstand zwischen Inseln", "Küstenrauschen", "Gipfelhöhe", "Bergfläche", "Gipfelrauschen", "Laubbäume", "Kiefern", "Büsche", "Blumen", "Felsen", "Größe der großen Inseln", "Größe der Inselchen", "Ausgewogen", "Gebirgig", "Großer Archipel", "Kleine Insel", "Seed {0} · {1} große Inseln + {2} Inselchen", "{0} Bäume ({1} Nadelbäume) · {2} Blumen · {3} Felsen", "Karte {0}×{0} {3} · Gipfel {1} {3} · {2} s", "Karte gespeichert: {0}", "Speichern hier nicht verfügbar: JSON in die Zwischenablage kopiert.", "Speichern in dieser Ansicht nicht verfügbar.", "Speichern abgebrochen.", "Speichern fehlgeschlagen.", "Erzeugung fehlgeschlagen.", "Keine Karte zum Speichern.", "Sprache", "Bild speichern", "Bild gespeichert: {0}", "Kein Bild zum Speichern.", "Zufällig", "Benutzerdefiniert", "Sehr leicht", "Leicht", "Mittel", "Schwer", "Sehr schwer", "Flache Küstenzonen", "Standard", "Inseln auf {0} % verkleinert, damit sie auf die Karte passen", "Schnee", "Maßeinheit", "Automatisch", "Meter (m)", "Fuß (ft)", "Höhe der unendlichen Welt", "Ozean", "Unendliche Welt auf {0}", "Neue Karte", "Wähle die Höhe der Welt. Unter dem Wasserspiegel erzeugt der Generator einen Archipel, darüber eine Landlandschaft.", "Landlandschaft", "Bestätigen", "Ufer", "Ebene", "Hochebene", "Hochland", "Landschaft", "Bergmassive", "Seen", "Seed {0} · {1} Bergmassive + {2} Seen", "Welt", "Flüsse", "Tiefe der Gewässer", "{0} Flüsse", "Breite der Gewässer", "{0} Seen", "Spalten", "Breite der Spalten", "Klüfte", "Canyons", "Tiefe der Canyons", "Strand", "Abbrechen"]};
+  const FLAGS = {"fr": "<svg viewBox=\"0 0 30 20\" preserveAspectRatio=\"none\" aria-hidden=\"true\"><rect width=\"10\" height=\"20\" fill=\"#0055A4\"/><rect x=\"10\" width=\"10\" height=\"20\" fill=\"#fff\"/><rect x=\"20\" width=\"10\" height=\"20\" fill=\"#EF4135\"/></svg>", "de": "<svg viewBox=\"0 0 30 20\" preserveAspectRatio=\"none\" aria-hidden=\"true\"><rect width=\"30\" height=\"7\" fill=\"#000\"/><rect y=\"7\" width=\"30\" height=\"6.7\" fill=\"#DD0000\"/><rect y=\"13.3\" width=\"30\" height=\"6.7\" fill=\"#FFCE00\"/></svg>", "es": "<svg viewBox=\"0 0 30 20\" preserveAspectRatio=\"none\" aria-hidden=\"true\"><rect width=\"30\" height=\"20\" fill=\"#AA151B\"/><rect y=\"5\" width=\"30\" height=\"10\" fill=\"#F1BF00\"/></svg>", "tr": "<svg viewBox=\"0 0 30 20\" preserveAspectRatio=\"none\" aria-hidden=\"true\"><rect width=\"30\" height=\"20\" fill=\"#E30A17\"/><circle cx=\"11\" cy=\"10\" r=\"5\" fill=\"#fff\"/><circle cx=\"12.5\" cy=\"10\" r=\"4\" fill=\"#E30A17\"/><polygon points=\"14.70,10.00 16.79,9.27 16.84,7.05 18.19,8.81 20.31,8.18 19.05,10.00 20.31,11.82 18.19,11.19 16.84,12.95 16.79,10.73\" fill=\"#fff\"/></svg>", "en": "<svg viewBox=\"0 0 30 20\" preserveAspectRatio=\"none\" aria-hidden=\"true\"><rect width=\"30\" height=\"20\" fill=\"#012169\"/><path d=\"M0 0L30 20M30 0L0 20\" stroke=\"#fff\" stroke-width=\"4\"/><path d=\"M0 0L30 20M30 0L0 20\" stroke=\"#C8102E\" stroke-width=\"1.4\"/><path d=\"M15 0V20M0 10H30\" stroke=\"#fff\" stroke-width=\"6.4\"/><path d=\"M15 0V20M0 10H30\" stroke=\"#C8102E\" stroke-width=\"3.6\"/></svg>"};
+  const flagEl = c => '<span class="flag">' + FLAGS[c] + '</span>';
+  let lang = 'fr';
+  // langue du système : première langue préférée prise en charge (sinon français)
+  try { const prefs = (navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || 'fr']); for (const l of prefs) { const nl = String(l).slice(0, 2).toLowerCase(); if (LANGS.some(x => x[0] === nl)) { lang = nl; break; } } } catch (e) { }
+  const t = (k, ...a) => {
+    let r = k;
+    if (lang !== 'fr') { const i = KEYS.indexOf(k); if (i >= 0) r = TR[lang][i]; }
+    return r.replace(/\{(\d)\}/g, (_, n) => a[n]);
+  };
+  const fx = (v, d) => v.toLocaleString(lang, { minimumFractionDigits: d, maximumFractionDigits: d });
+  const xf = v => '× ' + fx(v, 2);
+  // unités d'affichage selon la langue : 1 u (unité du jeu) = 1 m ; anglais en pieds
+  const UNITS = { m: ['m', 1], ft: ['ft', 3.28084] };
+  let unitPref = 'auto';   // 'auto' : selon la langue (anglais en pieds), sinon 'm' ou 'ft'
+  const unitKey = () => unitPref === 'auto' ? (lang === 'en' ? 'ft' : 'm') : unitPref;
+  const uk = () => UNITS[unitKey()][1], us = () => UNITS[unitKey()][0];
+  const ln = v => Math.round(v * uk()).toLocaleString(lang) + ' ' + us();
+  const lnd = v => { const x = v * uk(); return fx(x, Math.abs(x - Math.round(x)) < 0.05 ? 0 : 1) + ' ' + us(); };   // avec décimale si besoin (0,5 m)
+  // nombre de props par curseur : valeur exacte de la dernière génération, estimation proportionnelle pendant le glissement
+  let propInfo = null;
+  const cnt = (id, v) => {
+    if (!propInfo) return '…';
+    const m = propInfo.mult[id], c = propInfo.counts[id];
+    if (m === v) return c.toLocaleString(lang);
+    if (m > 0) return '≈ ' + Math.round(c * v / m).toLocaleString(lang);
+    return v === 0 ? '0' : '…';
+  };
+  const propCounts = res => {
+    const c = { leaf: 0, pine: 0, bush: 0, flower: 0, rock: 0 };
+    res.props.forEach(q => {
+      if (FLOWER.has(q.k)) c.flower++; else if (q.k === 'boulder') c.rock++;
+      else if (CONIFER.has(q.k)) c.pine++; else if (q.k === 'bush' || q.k === 'sapling') c.bush++;
+      else if (q.k !== 'snag') c.leaf++;
+    });
+    return c;
+  };
+  // paliers de consommation de ressources (mémoire et temps de génération), selon la taille de la carte
+  const TIERS = [[64, 'Très léger'], [112, 'Léger'], [176, 'Moyen'], [240, 'Lourd'], [1e9, 'Très lourd']];
+  const tierOf = v => TIERS.findIndex(x => v <= x[0]);
+  const DEFS = [
+    { g: 'Archipel', id: 'size', label: 'Taille de la carte', min: 48, max: 288, step: 24, def: 120, tier: true, fmt: v => Math.round(2 * v * uk()).toLocaleString(lang) + ' × ' + ln(2 * v) + ' · ' + t(TIERS[tierOf(v)][1]) },
+    { g: 'Archipel', id: 'big', label: 'Grandes îles', min: 0, max: 6, step: 1, def: 1 },
+    { g: 'Archipel', id: 'small', label: 'Îlots', min: 0, max: 24, step: 1, def: 3 },
+    { g: 'Archipel', id: 'gap', label: 'Écart entre les îles', min: 0, max: 400, step: 1, def: 100, fmt: v => ln(v) },
+    { g: 'Relief', id: 'mountain', label: 'Hauteur des sommets', min: 2, max: 30, step: 1, def: 10, fmt: v => ln(v) },
+    { g: 'Relief', id: 'mtnSize', label: 'Surface des montagnes', min: 0.5, max: 2.5, step: 0.05, def: 1.5, fmt: v => Math.round((v - 0.5) / 2 * 100) + ' %' },
+    { g: 'Relief', id: 'roughness', label: 'Bruit des sommets', min: 0, max: 1, step: 0.05, def: 0.5, fmt: pct },
+    { g: 'Relief', id: 'flatCoast', label: 'Zones plates côtières', min: 0, max: 1, step: 0.05, def: 0.5, fmt: pct },
+    { g: 'Relief', id: 'rivers', label: 'Rivières', min: 0, max: 10, step: 1, def: 0 },
+    { g: 'Relief', id: 'lakes', label: 'Lacs', min: 0, max: 10, step: 1, def: 0 },
+    { g: 'Relief', id: 'waterWidth', label: "Largeur des points d'eau", min: 0.5, max: 2.5, step: 0.05, def: 1, fmt: xf },
+    { g: 'Relief', id: 'waterDepth', label: "Profondeur des points d'eau", min: 0.5, max: 6, step: 0.5, def: 2.5, fmt: v => fx(v * uk(), 1) + ' ' + us() },
+    { g: 'Relief', id: 'beach', label: 'Plage', min: 0, max: 10, step: 1, def: 0, fmt: v => v === 0 ? '—' : ln(v) },
+    { g: 'Relief', id: 'fissures', label: 'Fissures', min: 0, max: 10, step: 1, def: 0 },
+    { g: 'Relief', id: 'fissureWidth', label: 'Largeur des fissures', min: 0.5, max: 3, step: 0.1, def: 1, fmt: xf },
+    { g: 'Relief', id: 'crevasses', label: 'Crevasses', min: 0, max: 30, step: 1, def: 0 },
+    { g: 'Relief', id: 'canyons', label: 'Canyons', min: 0, max: 6, step: 1, def: 0 },
+    { g: 'Relief', id: 'canyonDepth', label: 'Profondeur des canyons', min: 2, max: 30, step: 1, def: 12, fmt: v => ln(v) },
+    { g: 'Relief', id: 'coast', label: 'Bruit des côtes', min: 0, max: 1, step: 0.05, def: 0.25, fmt: pct },
+    { g: 'Nature', id: 'leaf', label: 'Feuillus', min: 0, max: 2, step: 0.05, def: 1, fmt: v => cnt('leaf', v) },
+    { g: 'Nature', id: 'pine', label: 'Pins', min: 0, max: 2, step: 0.05, def: 1, fmt: v => cnt('pine', v) },
+    { g: 'Nature', id: 'bush', label: 'Buissons', min: 0, max: 2, step: 0.05, def: 1, fmt: v => cnt('bush', v) },
+    { g: 'Nature', id: 'flower', label: 'Fleurs', min: 0, max: 2, step: 0.05, def: 1, fmt: v => cnt('flower', v) },
+    { g: 'Nature', id: 'rock', label: 'Rochers', min: 0, max: 2, step: 0.05, def: 1, fmt: v => cnt('rock', v) }
+  ];
+  const ADV = [
+    { g: 'Avancé', id: 'bigSize', label: 'Taille des grandes îles', min: 16, max: 120, step: 1, def: 30, fmt: v => ln(v) },
+    { g: 'Avancé', id: 'smallSize', label: 'Taille des îlots', min: 4, max: 36, step: 1, def: 10, fmt: v => ln(v) }
+  ];
+  const DEFVALS = {};
+  DEFS.concat(ADV).forEach(d => DEFVALS[d.id] = d.def);
+  const PRESETS = [
+    { n: 'Par défaut', v: DEFVALS },
+    { n: 'Équilibré', v: { big: 3, small: 8, size: 168, mtnSize: 1, mountain: 29, roughness: 0.3, leaf: 1, pine: 1, bush: 1, flower: 1, rock: 1 } },
+    { n: 'Montagneux', v: { mtnSize: 1.8, mountain: 30, roughness: 0.85 } },
+    { n: 'Grand archipel', v: { big: 4, small: 14, size: 240 } },
+    { n: 'Petite île', v: { big: 1, small: 3, size: 120 } }
+  ];
+
+  const ICONS = {
+    big: '<path d="M3 19h18"/><path d="M5 19l6-11 3 5 2-3 3 9"/>',
+    small: '<path d="M4 18h16"/><path d="M8 18c0-3 2-5 4-5s4 2 4 5"/><path d="M12 13V8"/>',
+    coast: '<path d="M3 15l2-3 2 4 2-6 2 6 2-4 2 4 2-5 2 4"/>',
+    lakes: '<path d="M4 14c2-3 5-4 8-4s6 1 8 4c-2 3-5 4-8 4s-6-1-8-4z"/><path d="M9 14h6"/>',
+    rivers: '<path d="M7 3c3 3-3 6 0 9s-3 6 0 9M15 3c3 3-3 6 0 9s-3 6 0 9"/>',
+    fissures: '<path d="M4 4l5 6-3 4 6 6M9 10l6-2 5 4"/>',
+    fissureWidth: '<path d="M8 3l-2 9 3 9M16 3l2 9-3 9"/>',
+    crevasses: '<path d="M12 3v6l-2 3 3 3-1 6"/>',
+    canyons: '<path d="M3 5h5l2 14h4l2-14h5"/>',
+    canyonDepth: '<path d="M3 5h5l1 8h6l1-8h5M12 21v-6M9 18l3 3 3-3"/>',
+    waterWidth: '<path d="M3 8c3-3 6 3 9 0s6 3 9 0M3 16c3-3 6 3 9 0s6 3 9 0"/>',
+    waterDepth: '<path d="M12 4v12M8 12l4 4 4-4M4 20h16"/>',
+    beach: '<path d="M3 16c3-3 6-3 9 0s6 3 9 0M3 20h18M8 11a4 4 0 0 1 8 0M12 3v2"/>',
+    size: '<rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 15l6-6M11 9h4v4"/>',
+    mtnSize: '<path d="M2 19l7-12 4 7 3-4 6 9z"/><path d="M2 22h20M19 20l2 2-2 2" transform="translate(0 -3)"/>',
+    mountain: '<path d="M12 20V6M7 11l5-5 5 5"/><path d="M5 20h14"/>',
+    roughness: '<path d="M3 16l4-7 3 5 3-9 4 10 4-5"/>',
+    flatCoast: '<path d="M3 15h18M3 19h18M5 11h6"/>',
+    leaf: '<circle cx="12" cy="9" r="5"/><path d="M12 14v7"/>',
+    pine: '<path d="M12 4l5 7h-3l4 6H6l4-6H7z"/><path d="M12 17v4"/>',
+    bush: '<path d="M3 19c0-4 2-6 5-6 0-3 2-5 4-5s4 2 4 5c3 0 5 2 5 6z"/>',
+    flower: '<circle cx="12" cy="9" r="2.5"/><path d="M12 6.5V4M12 11.5V14M9.5 9H7M14.5 9H17M12 14v7"/>',
+    rock: '<path d="M4 19l3-8 5-3 6 4 2 7z"/>',
+    gap: '<path d="M4 12h16M7 9l-3 3 3 3M17 9l3 3-3 3"/>',
+    bigSize: '<circle cx="12" cy="12" r="9"/>',
+    smallSize: '<circle cx="12" cy="12" r="5"/>'
+  };
+  const vals = {};
+  DEFS.concat(ADV).forEach(d => vals[d.id] = d.def);
+  vals.worldH = -6;   // hauteur du monde infini : choisie dans le menu « Monde » (pas un curseur)
+  const STORE = 'atelier-iles-v1';
+  try {
+    const saved = JSON.parse(localStorage.getItem(STORE) || 'null');
+    if (false && saved && saved.vals) Object.keys(saved.vals).forEach(k => { if (k in vals && typeof saved.vals[k] === 'number' && !(k === 'gap' && saved.vals[k] === 45) && !(k === 'coast' && saved.vals[k] === 0) && !(k === 'bigSize' && saved.vals[k] === 46) && !(k === 'smallSize' && saved.vals[k] === 9)) vals[k] = saved.vals[k]; });
+    if (saved && saved.name) $('mapname').value = saved.name;
+    if (saved && ['auto', 'm', 'ft'].includes(saved.unit)) unitPref = saved.unit;
+  } catch (e) { /* stockage indisponible */ }
+  $('seed').value = 1 + Math.floor(Math.random() * 999999);
+  const persist = () => { try { localStorage.setItem(STORE, JSON.stringify({ vals, name: $('mapname').value, season: Number($('season').value), unit: unitPref })); } catch (e) { } };
+
+  const setPct = inp => inp.style.setProperty('--pct', ((inp.value - inp.min) / (inp.max - inp.min) * 100) + '%');
+  function setOut(d) {
+    const o = $('o-' + d.id);
+    o.textContent = d.fmt ? d.fmt(vals[d.id]) : String(vals[d.id]);
+    if (d.tier) o.dataset.tier = tierOf(vals[d.id]);
+  }
+  function buildRow(d, host) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = '<label for="s-' + d.id + '"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true">' + (ICONS[d.id] || '') + '</svg>' +
+      '<span class="lt"><span data-t>' + d.label + '</span><output id="o-' + d.id + '" for="s-' + d.id + '"></output></span></label>' +
+      '<input type="range" id="s-' + d.id + '" min="' + d.min + '" max="' + d.max + '" step="' + d.step + '">';
+    host.appendChild(row);
+    const inp = row.querySelector('input');
+    inp.value = vals[d.id];
+    setPct(inp);
+    const show = () => setOut(d);
+    show();
+    inp.addEventListener('input', () => { vals[d.id] = Number(inp.value); setPct(inp); show(); });
+    inp.addEventListener('change', () => { $('presetSel').value = ''; persist(); autoRun(); });
+  }
+  const TABS = ['Archipel', 'Nature', 'Avancé'];   // « Archipel » (« Paysage » en mode terre) regroupe aussi les réglages de relief
+  const tabBtns = {}, tabPanes = {};
+  function selectTab(n) {
+    TABS.forEach(k => { tabBtns[k].setAttribute('aria-selected', String(k === n)); tabPanes[k].hidden = k !== n; });
+  }
+  TABS.forEach(name => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'tab'; b.textContent = name; b.setAttribute('data-t', ''); b.setAttribute('role', 'tab');
+    b.addEventListener('click', () => selectTab(name));
+    const pane = document.createElement('div');
+    pane.setAttribute('role', 'tabpanel');
+    $('tabs').appendChild(b); $('panes').appendChild(pane);
+    tabBtns[name] = b; tabPanes[name] = pane;
+  });
+  DEFS.concat(ADV).forEach(d => {
+    const host = tabPanes[d.g === 'Relief' ? 'Archipel' : d.g];
+    buildRow(d, host);
+  });
+  tabPanes['Avancé'].appendChild($('extra'));
+  selectTab('Archipel');
+  function syncSliders() {
+    DEFS.concat(ADV).forEach(d => {
+      const inp = $('s-' + d.id); inp.value = vals[d.id]; setPct(inp);
+      setOut(d);
+    });
+    if (typeof applyMode === 'function') applyMode();
+  }
+  const presetSel = $('presetSel');
+  const optCustom = document.createElement('option');
+  optCustom.value = ''; optCustom.textContent = 'Personnalisé'; optCustom.setAttribute('data-t', '');
+  presetSel.appendChild(optCustom);
+  PRESETS.forEach((p, i) => {
+    const o = document.createElement('option');
+    o.value = String(i); o.textContent = p.n; o.setAttribute('data-t', '');
+    presetSel.appendChild(o);
+  });
+  presetSel.value = '0';
+  presetSel.addEventListener('change', () => {
+    if (presetSel.value === '') return;
+    Object.assign(vals, PRESETS[Number(presetSel.value)].v);
+    vals.canyons = vals.worldH === 10 ? 3 : DEFVALS.canyons;
+    { const w = waterDefaults(); vals.lakes = w.lakes; vals.rivers = w.rivers; }   // paysage terrestre : 3 points d'eau au plus par défaut (Rivage : plutôt des rivières)
+    syncSliders(); persist(); run();
+  });
+  $('rand').addEventListener('click', () => {
+    DEFS.concat(ADV).forEach(d => {
+      const lo = d.id === 'big' ? Math.max(1, d.min) : d.min;
+      const n = Math.round((d.max - lo) / d.step);
+      const v = lo + Math.floor(Math.random() * (n + 1)) * d.step;
+      vals[d.id] = Number(v.toFixed(4));
+    });
+    presetSel.value = '';
+    $('seed').value = 1 + Math.floor(Math.random() * 999999);
+    view.k = 1; view.x = view.y = 0; applyView(); resetCam();   // dézoome la carte et recentre la caméra 3D
+    syncSliders(); persist(); run();
+  });
+
+  function getParams() {
+    const seed = Math.max(1, Math.min(999999, Math.floor(Number($('seed').value)) || 1));
+    $('seed').value = seed;
+    return {
+      seed, big: vals.big, small: vals.small, size: vals.size, gap: vals.gap,
+      bigRadius: [vals.bigSize - 4, vals.bigSize + 4],
+      smallRadius: [Math.max(1, vals.smallSize - 3), vals.smallSize + 3],
+      mtnSize: vals.mtnSize, coastNoise: vals.coast, mountain: vals.mountain, roughness: vals.roughness, plains: 0.7, flatCoast: vals.flatCoast || 0, cliffs: 0,
+      leaf: vals.leaf, pine: vals.pine, bush: vals.bush, flower: vals.flower, rock: vals.rock, season: Number($('season').value) || 2,
+      name: ($('mapname').value || 'archipelago').trim() || 'archipelago',
+      worldH: vals.worldH, rivers: vals.rivers, lakes: vals.lakes, waterDepth: vals.waterDepth, beach: vals.beach, waterWidth: vals.waterWidth,
+      fissures: vals.worldH === 6 ? vals.fissures : 0, fissureWidth: vals.fissureWidth, crevasses: vals.worldH === 6 ? vals.crevasses : 0,
+      canyons: vals.worldH === 10 ? vals.canyons : 0, canyonDepth: vals.canyonDepth
+    };
+  }
+
+  /* ---------- aperçu ---------- */
+  // palette alignée sur le jeu : plage fine, prairie dominante, roche puis neige en altitude (dégradés doux, pas de paliers)
+  const STOPS_BASE = [[0.07, 232, 221, 184], [0.28, 228, 214, 172], [0.6, 160, 192, 108], [1.2, 128, 176, 88], [3.5, 112, 168, 80],
+    [7, 92, 148, 74], [10, 100, 138, 82], [13, 128, 128, 112], [17, 150, 144, 134], [21, 205, 205, 205], [25, 238, 242, 248], [30, 248, 250, 253]];
+  const STOPS_AUTUMN = STOPS_BASE.map(a => a.slice());
+[[0.6,168,182,106],[1.2,158,164,88],[3.5,142,142,76],[7,124,112,68],[10,112,104,76]].forEach(([h,r,g,b]) => { const s = STOPS_AUTUMN.find(x => x[0] === h); if (s) { s[1]=r; s[2]=g; s[3]=b; } });
+const STOPS_SPRING = STOPS_BASE.map(a => a.slice());
+[[0.6,168,206,110],[1.2,138,192,90],[3.5,122,184,84],[7,100,162,78],[10,106,146,86]].forEach(([h,r,g,b]) => { const s = STOPS_SPRING.find(x => x[0] === h); if (s) { s[1]=r; s[2]=g; s[3]=b; } });
+let pSeason = 2;   // saison affichée dans l'aperçu (1 printemps · 2 été · 3 automne · 4 hiver)
+const ROCK = [122, 116, 106], SNOW = [244, 247, 251];
+  let winter = false;   // mode « Hiver » : aperçu uniquement, toute la carte enneigée (les sommets le sont toujours)
+  function landColor(h, out, slope) {
+    const STOPS = pSeason === 3 ? STOPS_AUTUMN : pSeason === 1 ? STOPS_SPRING : STOPS_BASE;
+    let i = 0;
+    while (i < STOPS.length - 2 && h > STOPS[i + 1][0]) i++;
+    const a = STOPS[i], b = STOPS[i + 1], u = clamp((h - a[0]) / (b[0] - a[0]), 0, 1), t = ramp(u);
+    out[0] = a[1] + (b[1] - a[1]) * t; out[1] = a[2] + (b[2] - a[2]) * t; out[2] = a[3] + (b[3] - a[3]) * t;
+    if (slope !== undefined && h > 1.5) {
+      // les pentes raides montrent la roche, sauf tout en haut où la neige l'emporte
+      const rk = ramp(clamp((slope - 0.55) / 0.9, 0, 1)) * (1 - ramp(clamp((h - 22) / 5, 0, 1)) * 0.6);
+      out[0] += (ROCK[0] - out[0]) * rk; out[1] += (ROCK[1] - out[1]) * rk; out[2] += (ROCK[2] - out[2]) * rk;
+      // neige : seuil dépendant de la pente (les faces raides restent grises)
+      const sn = ramp(clamp((h - (15 + slope * 4)) / 4, 0, 1));
+      out[0] += (SNOW[0] - out[0]) * sn; out[1] += (SNOW[1] - out[1]) * sn; out[2] += (SNOW[2] - out[2]) * sn;
+      // hiver : tout le terrain est recouvert, seules les parois les plus raides laissent voir la roche
+      if (winter) {
+        const w = clamp(0.94 - ramp(clamp((slope - 0.8) / 1.0, 0, 1)) * 0.5, 0, 1);
+        out[0] += (SNOW[0] - out[0]) * w; out[1] += (SNOW[1] - out[1]) * w; out[2] += (SNOW[2] - out[2]) * w;
+      }
+    } else if (winter && h > 0.07) {
+      // plages : neige plus légère près de l'eau
+      const w = clamp((h - 0.07) / 0.5, 0, 1) * 0.85;
+      out[0] += (SNOW[0] - out[0]) * w; out[1] += (SNOW[1] - out[1]) * w; out[2] += (SNOW[2] - out[2]) * w;
+    }
+  }
+  let cur = null, base = null;
+  const CONIFER = new Set(['pine', 'spruce', 'fir', 'stone_pine']);
+  const FLOWER = new Set(['daisy', 'poppy', 'bluebell', 'meadow', 'sunflower']);
+  const SMALLP = new Set(['bush', 'sapling', 'snag']);
+
+  function renderBase(res) {
+    const { H, N, half } = res;
+    const R = 1024, span = 2 * half;                 // 1 pixel = span / R unités (indépendant de la grille)
+    const upx = span / R;                            // unités par pixel
+    const off = document.createElement('canvas'); off.width = off.height = R;
+    const ctx = off.getContext('2d'), img = ctx.createImageData(R, R), d = img.data, col3 = [0, 0, 0], pgx = [0, 0, 0];
+    const X0 = res.X0;
+    // hauteur interpolée (bilinéaire) en coordonnées monde
+    const hAt = (x, z) => {
+      const c = clamp((x - X0) / CS, 0, N - 1), r = clamp((z - X0) / CS, 0, N - 1);
+      const c0 = Math.floor(c), r0 = Math.floor(r), c1 = Math.min(c0 + 1, N - 1), r1 = Math.min(r0 + 1, N - 1);
+      const fc = c - c0, fr = r - r0;
+      return (H[r0 * N + c0] * (1 - fc) + H[r0 * N + c1] * fc) * (1 - fr) + (H[r1 * N + c0] * (1 - fc) + H[r1 * N + c1] * fc) * fr;
+    };
+    const e = Math.max(CS, upx);                     // pas de dérivation (u)
+    for (let py = 0; py < R; py++) {
+      const z = -half + (py + 0.5) * upx;
+      for (let px = 0; px < R; px++) {
+        const x = -half + (px + 0.5) * upx;
+        const h = hAt(x, z) - (WL - 0.07);       // recalé : la palette reste calée sur 0,07 = ligne d'eau
+        let r, g, b;
+        if (h <= 0.07) {
+          const t = clamp((h + 4) / 4.07, 0, 1);
+          r = 26 + 44 * t; g = 82 + 88 * t; b = 122 + 68 * t;
+          if (winter) {
+            // hiver : la mer est gelée (glace bleutée, plus claire près des côtes, fines fissures)
+            r = 70 + 50 * t; g = 125 + 55 * t; b = 168 + 45 * t;
+            const cr = Math.abs(Math.sin(x * 0.9 + Math.sin(z * 0.37) * 2.2) * Math.sin(z * 0.8 + Math.sin(x * 0.29) * 2.2));
+            const k = cr < 0.05 ? 0.9 : 1;
+            r *= k; g *= k; b *= k;
+          }
+          // liseré d'écume au bord de l'eau
+          const f = clamp(1 - (0.07 - h) / 0.35, 0, 1);
+          if (f > 0) { r += (240 - r) * f * 0.55; g += (246 - g) * f * 0.55; b += (250 - b) * f * 0.55; }
+        } else {
+          const gx = (hAt(x + e, z) - hAt(x - e, z)) / (2 * e), gz = (hAt(x, z + e) - hAt(x, z - e)) / (2 * e);
+          landColor(h, col3, Math.hypot(gx, gz));
+          const k = 1 + clamp((gx + gz) * 0.25, -0.4, 0.4);
+          r = col3[0] * k; g = col3[1] * k; b = col3[2] * k;
+          const we = edgeW(x, z, half, res.land, res.seed);
+          if (we > 0) { plainGreen(pgx); r += (pgx[0] - r) * we; g += (pgx[1] - g) * we; b += (pgx[2] - b) * we; }
+        }
+        const o = (py * R + px) * 4;
+        d[o] = r; d[o + 1] = g; d[o + 2] = b; d[o + 3] = 255;
+      }
+    }
+    ctx.putImageData(img, 0, 0);
+    return off;
+  }
+  // spawn par défaut (origine du monde) : petite épingle rouge
+  function drawSpawn(ctx, R) {
+    const x = R / 2, y = R / 2, s = Math.max(9, R * 0.026);
+    ctx.save();
+    ctx.lineWidth = Math.max(1.5, s * 0.16); ctx.strokeStyle = '#ffffff'; ctx.fillStyle = '#d6402f'; ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.bezierCurveTo(x - s * 0.9, y - s * 0.9, x - s * 0.8, y - s * 2.0, x, y - s * 2.0);
+    ctx.bezierCurveTo(x + s * 0.8, y - s * 2.0, x + s * 0.9, y - s * 0.9, x, y);
+    ctx.closePath(); ctx.stroke(); ctx.fill();
+    ctx.fillStyle = '#ffffff';
+    ctx.beginPath(); ctx.arc(x, y - s * 1.3, s * 0.32, 0, Math.PI * 2); ctx.fill();
+    ctx.restore();
+  }
+  const AUTUMN_DEC = ['#d9731f', '#c8541a', '#e0a21f', '#b8421f', '#d68a22', '#a8561c', '#e8b83a'];
+  const SPRING_DEC = ['#3f9e3a', '#5fb84a', '#4aa845', '#dd8aa6', '#eebccb', '#78bd54', '#358f3e'];
+  function treeColor(q) {
+    if (winter) return q.k === 'boulder' ? '#8c9096' : SMALLP.has(q.k) ? '#d9e2e4' : CONIFER.has(q.k) ? '#4d7a68' : '#a9b2ad';
+    if (q.k === 'boulder') return '#7a7a7a';
+    const h = q.v * 5 + Math.floor(q.id / 7) * 3;
+    if (pSeason === 3) return SMALLP.has(q.k) ? ['#c98a2e', '#b86a24', '#d8a53a'][h % 3] : CONIFER.has(q.k) ? '#2d5a38' : AUTUMN_DEC[h % AUTUMN_DEC.length];
+    if (pSeason === 1) {
+      if (SMALLP.has(q.k)) return ['#5fb04a', '#74c25a', '#e48fb0'][h % 3];
+      if (CONIFER.has(q.k)) return '#236b3c';
+      if (q.k === 'cherry' || q.k === 'apple') return h % 2 ? '#e8a0b8' : '#f3d2dd';
+      return SPRING_DEC[h % SPRING_DEC.length];
+    }
+    return SMALLP.has(q.k) ? '#78b85a' : CONIFER.has(q.k) ? '#1f5a35' : '#3a8f3c';
+  }
+  // vert « plaine » : couleur du sol autour de la carte en paysage terrestre (aperçu 2D plein écran et rendu 3D) ;
+  // le bord de la carte y revient en douceur, comme sa hauteur revient au niveau du monde.
+  const PLAIN_H = 1.2, pgC = [0, 0, 0];
+  let pgKey = '';
+  function plainGreen(out) {
+    const key = pSeason + '|' + winter;
+    if (key !== pgKey) { landColor(PLAIN_H, pgC, 0); pgKey = key; }
+    out[0] = pgC[0]; out[1] = pgC[1]; out[2] = pgC[2];
+  }
+  function edgeW(x, z, half, land, seed) {   // 0 à l'intérieur, 1 au bord de la carte (même contour ondulé et même largeur que le fondu du relief)
+    if (!land) return 0;
+    const d0 = half - Math.max(Math.abs(x), Math.abs(z)), fw = 44 * clamp(half / 96, 0.7, 1.3);
+    if (d0 >= fw / 0.65) return 0;
+    const d = d0 * (1 + 0.35 * edgeWave(x, z, seed)), we = ramp(clamp(1 - d / fw, 0, 1));
+    return clamp(we + edgeGrain(x, z, seed) * 0.3 * 4 * we * (1 - we), 0, 1);   // grain : le vert se mélange par plaques au terrain
+  }
+  function pentagon(ctx, x, y, r, rot) {   // pentagone régulier, pointe vers le haut (+ rotation)
+    ctx.moveTo(x + r * Math.sin(rot), y - r * Math.cos(rot));
+    for (let i = 1; i < 5; i++) { const t = rot + i * Math.PI * 2 / 5; ctx.lineTo(x + r * Math.sin(t), y - r * Math.cos(t)); }
+    ctx.closePath();
+  }
+  // couleur du « monde infini » au-delà de la carte (océan ou terrain au niveau du monde), identique à celle du bord de l'aperçu
+  function worldColor() {
+    const hh = cur.worldH - (WL - 0.07);
+    let r, g, b;
+    if (hh <= 0.07) {
+      const t = clamp((hh + 4) / 4.07, 0, 1);
+      if (winter) { r = 70 + 50 * t; g = 125 + 55 * t; b = 168 + 45 * t; } else { r = 26 + 44 * t; g = 82 + 88 * t; b = 122 + 68 * t; }
+    } else { const c = [0, 0, 0]; plainGreen(c); r = c[0]; g = c[1]; b = c[2]; }
+    return 'rgb(' + Math.round(r) + ',' + Math.round(g) + ',' + Math.round(b) + ')';
+  }
+  function paint() {
+    const cv = $('cv'), ctx = cv.getContext('2d');
+    if (!base) return;
+    $('box').style.background = cur && $('box').classList.contains('full') ? worldColor() : '';   // plein écran : le monde se prolonge autour de la carte
+    const R = $('box').classList.contains('full') ? 640 : base.width;   // moins de pixels en plein écran
+    cv.width = cv.height = R;
+    ctx.drawImage(base, 0, 0, R, R);
+    if (cur) {
+      const span = 2 * cur.half, sc = R / span;
+      // grille des chunks (1 chunk = U unités), très discrète
+      ctx.save();
+      ctx.strokeStyle = 'rgba(255,255,255,.14)'; ctx.lineWidth = 1; ctx.beginPath();
+      for (let v = -cur.half; v <= cur.half; v += U) {
+        const p = (v + cur.half) * sc;
+        ctx.moveTo(p, 0); ctx.lineTo(p, R); ctx.moveTo(0, p); ctx.lineTo(R, p);
+      }
+      ctx.stroke(); ctx.restore();
+    }
+    if (cur && $('optVeg').checked) {
+      const span = 2 * cur.half, sc = R / span;
+      const list = cur.props.filter(q => !FLOWER.has(q.k)).sort((a, b) => a.z - b.z);
+      // ombres puis couronnes, aux dimensions réelles (en unités)
+      const rad = q => q.k === 'boulder' ? 1.1 : SMALLP.has(q.k) ? 0.9 : CONIFER.has(q.k) ? 2.2 : 2.4;
+      ctx.fillStyle = 'rgba(0,0,0,.22)';
+      for (const q of list) {
+        const rr = rad(q) * (q.s || 1) * sc;
+        ctx.beginPath(); if (q.k === 'boulder') ctx.arc((q.x + cur.half) * sc + rr * 0.35, (q.z + cur.half) * sc + rr * 0.35, rr, 0, Math.PI * 2); else pentagon(ctx, (q.x + cur.half) * sc + rr * 0.35, (q.z + cur.half) * sc + rr * 0.35, rr, q.a || 0); ctx.fill();
+      }
+      for (const q of list) {
+        const x = (q.x + cur.half) * sc, y = (q.z + cur.half) * sc, rr = Math.max(rad(q) * (q.s || 1) * sc, 1.2);
+        const color = treeColor(q);
+        ctx.fillStyle = color; ctx.strokeStyle = 'rgba(0,0,0,.28)'; ctx.lineWidth = Math.max(0.6, sc * 0.12);
+        const pent = q.k !== 'boulder', rot = q.a || 0;
+        ctx.beginPath(); if (pent) pentagon(ctx, x, y, rr, rot); else ctx.arc(x, y, rr, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        if (rr > 3) { ctx.fillStyle = winter ? 'rgba(255,255,255,.55)' : 'rgba(255,255,255,.18)'; ctx.beginPath(); if (pent) pentagon(ctx, x - rr * 0.3, y - rr * 0.3, rr * 0.5, rot); else ctx.arc(x - rr * 0.3, y - rr * 0.3, rr * 0.5, 0, Math.PI * 2); ctx.fill(); }
+      }
+      // fleurs : petits points
+      const fr = Math.max(1, 0.35 * sc);
+      for (const q of cur.props) {
+        if (winter || pSeason === 3 || !FLOWER.has(q.k)) continue;
+        const x = (q.x + cur.half) * sc, y = (q.z + cur.half) * sc;
+        ctx.fillStyle = q.k === 'poppy' ? '#e8553d' : q.k === 'bluebell' ? '#7c8cf0' : q.k === 'sunflower' ? '#f2c230' : 'rgba(255,255,255,.95)';
+        ctx.beginPath(); ctx.arc(x, y, fr, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+    if (cur) {
+      drawSpawn(ctx, R);
+      // échelle : barre de 20 u
+      const sc = R / (2 * cur.half), unitTarget = us() === 'ft' ? 50 : 20, len = unitTarget / uk() * sc, bx = R * 0.04, by = R * 0.96;
+      ctx.save();
+      ctx.fillStyle = 'rgba(0,0,0,.35)'; ctx.fillRect(bx - 8, by - 30, len + 16, 38);
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 3; ctx.beginPath();
+      ctx.moveTo(bx, by - 6); ctx.lineTo(bx, by); ctx.lineTo(bx + len, by); ctx.lineTo(bx + len, by - 6); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.font = '600 15px sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(unitTarget + ' ' + us(), bx + len / 2, by - 12);
+      ctx.restore();
+    }
+  }
+  function statsText(res) {
+    const c = { tree: 0, conifer: 0, flower: 0, rock: 0 };
+    res.props.forEach(q => {
+      if (FLOWER.has(q.k)) c.flower++; else if (q.k === 'boulder') c.rock++;
+      else if (CONIFER.has(q.k)) { c.conifer++; c.tree++; } else if (!SMALLP.has(q.k)) c.tree++;
+    });
+    const f = n => n.toLocaleString(lang);
+    return (res.land ? t('Graine {0} · {1} massifs + {2} lacs', res.seed, res.big.length, res.lakes.length) : t('Graine {0} · {1} grandes îles + {2} îlots', res.seed, res.big.length, res.small.length)) + (!res.land && res.lakes.length ? ' · ' + t('{0} lacs', res.lakes.length) : '') + (res.rivers ? ' · ' + t('{0} rivières', res.rivers) : '') + '\n' +
+      t('{0} arbres (dont {1} conifères) · {2} fleurs · {3} rochers', f(c.tree), f(c.conifer), f(c.flower), f(c.rock)) + '\n' +
+      t('Carte {0}×{0} {3} · sommet {1} {3} · {2} s', Math.round(2 * res.half * uk()).toLocaleString(lang), fx(res.maxH * uk(), 0), fx(res.ms / 1000, 1), us()) +
+      (res.worldH > -5.99 ? '\n' + t('Monde infini à {0}', lnd(res.worldH)) : '') +
+      (res.scale < 0.99 ? '\n' + t('Îles réduites à {0} % pour tenir dans la carte', Math.round(res.scale * 100)) : '');
+  }
+  
+  /* ---------- aperçu 3D : maillage de la carte, vue en légère contre-plongée, rotation au doigt ---------- */
+  let mode3d = false, mesh3d = null, raf3 = 0, moving3 = false, movT3 = 0;
+  const bump3 = () => { moving3 = true; clearTimeout(movT3); movT3 = setTimeout(() => { moving3 = false; queue3(); }, 220); queue3(); };
+  const CAM0 = { yaw: 0, pitch: 0.3, dist: 1.2 };
+  const cam = Object.assign({}, CAM0);
+  const resetCam = () => { Object.assign(cam, CAM0); if (mode3d) queue3(); };   // dist : multiple de la largeur de la carte
+  const EX3 = 1.5;                                      // exagération verticale
+  const SKY_TOP = [74, 137, 200], HAZE = [185, 214, 234], FOCAL_K = 0.5 / Math.tan(0.4);
+  const mix3 = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+  const rgb3 = c => 'rgb(' + Math.round(c[0]) + ',' + Math.round(c[1]) + ',' + Math.round(c[2]) + ')';
+  const deepWater = () => winter ? [70, 125, 168] : [26, 82, 122];
+  function buildMesh(res, G) {
+    const { H, N, half, X0 } = res;
+    const n = G + 1, step = 2 * half / G;
+    const hAt = (x, z) => {
+      const c = clamp((x - X0) / CS, 0, N - 1), r = clamp((z - X0) / CS, 0, N - 1);
+      const c0 = Math.floor(c), r0 = Math.floor(r), c1 = Math.min(c0 + 1, N - 1), r1 = Math.min(r0 + 1, N - 1);
+      const fc = c - c0, fr = r - r0;
+      return (H[r0 * N + c0] * (1 - fc) + H[r0 * N + c1] * fc) * (1 - fr) + (H[r1 * N + c0] * (1 - fc) + H[r1 * N + c1] * fc) * fr - (WL - 0.07);
+    };
+    const hv = new Float32Array(n * n), VX = new Float32Array(n * n), VY = new Float32Array(n * n), VZ = new Float32Array(n * n);
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      const k = i * n + j, x = -half + j * step, z = -half + i * step, h = hAt(x, z);
+      hv[k] = h; VX[k] = x; VZ[k] = z; VY[k] = (Math.max(h, 0.07) - 0.07) * EX3;
+    }
+    // couleur par sommet (eau → sable → herbe → roche → neige, continue), puis par maille : dégradé le long de la diagonale si les coins diffèrent
+    const cells = G * G, cstr = new Array(cells), skip = new Uint8Array(cells), needG = new Uint8Array(cells), col = [0, 0, 0];
+    const vc = new Float32Array(n * n * 3), vstr = new Array(n * n), pgv = [0, 0, 0];
+    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) {
+      const k = i * n + j, h = hv[k];
+      let r, g, b;
+      if (h <= 0.07) {
+        const t = clamp((h + 4) / 4.07, 0, 1);
+        if (winter) { r = 70 + 34 * t; g = 125 + 37 * t; b = 168 + 30 * t; } else { r = 26 + 30 * t; g = 82 + 58 * t; b = 122 + 45 * t; }
+      } else {
+        const hx0 = hv[i * n + Math.max(j - 1, 0)], hx1 = hv[i * n + Math.min(j + 1, n - 1)];
+        const hz0 = hv[Math.max(i - 1, 0) * n + j], hz1 = hv[Math.min(i + 1, n - 1) * n + j];
+        const gx = (hx1 - hx0) / (2 * step), gz = (hz1 - hz0) / (2 * step);
+        landColor(Math.max(h, 0.08), col, Math.hypot(gx, gz));
+        const kk = 1 + clamp((gx + gz) * 0.3, -0.4, 0.4);
+        r = col[0] * kk; g = col[1] * kk; b = col[2] * kk;
+        const we = edgeW(VX[k], VZ[k], half, res.land, res.seed);
+        if (we > 0) { plainGreen(pgv); r += (pgv[0] - r) * we; g += (pgv[1] - g) * we; b += (pgv[2] - b) * we; }
+      }
+      vc[k * 3] = r; vc[k * 3 + 1] = g; vc[k * 3 + 2] = b; vstr[k] = rgb3([r, g, b]);
+    }
+    for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) {
+      const a = i * n + j, b = a + 1, c = a + n, d = c + 1, ci = i * G + j;
+      if (Math.max(hv[a], hv[b], hv[c], hv[d]) <= -4) { skip[ci] = 1; continue; }   // eau profonde : identique à l'océan de fond
+      let lo0 = 1e9, hi0 = -1e9, lo1 = 1e9, hi1 = -1e9, lo2 = 1e9, hi2 = -1e9, s0 = 0, s1 = 0, s2 = 0;
+      for (const v of [a, b, c, d]) {
+        const r = vc[v * 3], g = vc[v * 3 + 1], bl = vc[v * 3 + 2];
+        s0 += r; s1 += g; s2 += bl;
+        if (r < lo0) lo0 = r; if (r > hi0) hi0 = r; if (g < lo1) lo1 = g; if (g > hi1) hi1 = g; if (bl < lo2) lo2 = bl; if (bl > hi2) hi2 = bl;
+      }
+      cstr[ci] = rgb3([s0 / 4, s1 / 4, s2 / 4]);
+      if (hi0 - lo0 > 9 || hi1 - lo1 > 9 || hi2 - lo2 > 9) needG[ci] = 1;
+    }
+    const pr = [];
+    for (const q of res.props) {
+      if (FLOWER.has(q.k)) continue;
+      const h = hAt(q.x, q.z); if (h <= 0.07) continue;
+      pr.push({ q, y: (h - 0.07) * EX3 });
+    }
+    return { res, season: pSeason, G, n, step, half, VX, VY, VZ, cstr, skip, needG, vstr, pr };
+  }
+  // Reflet du soleil sur l'eau : mini-shader spéculaire. Soleil fixe dans le monde ; pas de vagues, juste un halo lisse ;
+  // intensité = halo doux (gaussienne en azimut / élévation). Utilisé par pixel sur l'océan de fond et par maille sur l'eau peu profonde.
+  const SUNE = 0.32, SUN = (() => { const a = 4.0, c = Math.cos(SUNE); return [Math.sin(a) * c, Math.sin(SUNE), Math.cos(a) * c]; })();
+  // reflet sur l'eau : azimut face à la caméra de départ (yaw 0 regarde vers -z) avec un léger décalage de 3/4 ; l'éclairage des volumes (SUN) reste inchangé
+  const GSUN = (() => { const a = Math.PI + 0.45, c = Math.cos(SUNE); return [Math.sin(a) * c, Math.sin(SUNE), Math.cos(a) * c]; })();
+  let glintCv = null;
+  const warm = (s, k) => { const q = s.match(/[0-9]+/g); return 'rgb(' + Math.round(q[0] * (1 - k) + 255 * k) + ',' + Math.round(q[1] * (1 - k) + 243 * k) + ',' + Math.round(q[2] * (1 - k) + 214 * k) + ')'; };
+  function glint(x, z, dx, dy, dz) {   // (dx,dy,dz) : direction normalisée caméra → point, dy < 0
+    if (dx * GSUN[0] - dy * GSUN[1] + dz * GSUN[2] < 0.7) return 0;   // trop loin du soleil : rien à calculer
+    // halo doux en deux écarts d'angle : azimut étroit, élévation large → colonne de lumière allongée vers la caméra
+    const ha = Math.atan2(dx * GSUN[2] - dz * GSUN[0], dx * GSUN[0] + dz * GSUN[2]), de = Math.asin(Math.min(1, -dy)) - SUNE;
+    return Math.exp(-ha * ha / 0.05 - de * de / 0.18);
+  }
+  // Props en 3D très simplifiés : petits volumes low-poly (bipyramides à 5 côtés), ombrage plat selon le soleil, faces cachées écartées.
+  function mkShape(verts, faces, c) {
+    const V = new Float32Array(verts.length * 3), N = new Float32Array(faces.length * 3);
+    verts.forEach((p, i) => { V[i * 3] = p[0]; V[i * 3 + 1] = p[1]; V[i * 3 + 2] = p[2]; });
+    faces.forEach((f, i) => {
+      const a = verts[f[0]], b = verts[f[1]], d = verts[f[2]];
+      let nx = (b[1] - a[1]) * (d[2] - a[2]) - (b[2] - a[2]) * (d[1] - a[1]), ny = (b[2] - a[2]) * (d[0] - a[0]) - (b[0] - a[0]) * (d[2] - a[2]), nz = (b[0] - a[0]) * (d[1] - a[1]) - (b[1] - a[1]) * (d[0] - a[0]);
+      const l = Math.hypot(nx, ny, nz) || 1; nx /= l; ny /= l; nz /= l;
+      let mx = 0, my = 0, mz = 0; f.forEach(j => { mx += verts[j][0]; my += verts[j][1]; mz += verts[j][2]; });
+      mx /= f.length; my /= f.length; mz /= f.length;
+      if (nx * (mx - c[0]) + ny * (my - c[1]) + nz * (mz - c[2]) < 0) { nx = -nx; ny = -ny; nz = -nz; }   // normale vers l'extérieur
+      N[i * 3] = nx; N[i * 3 + 1] = ny; N[i * 3 + 2] = nz;
+    });
+    return { V, F: faces, N, nv: verts.length, yc: c[1] };
+  }
+  function bipyr(n, radii, yb, yr, yt, withBottom) {
+    const verts = [[0, yt, 0]], faces = [];
+    if (withBottom) verts.push([0, yb, 0]);
+    const off = verts.length;
+    for (let i = 0; i < n; i++) { const a = i / n * Math.PI * 2, r = Array.isArray(radii) ? radii[i % radii.length] : radii; verts.push([Math.cos(a) * r, yr, Math.sin(a) * r]); }
+    for (let i = 0; i < n; i++) { const j = (i + 1) % n; faces.push([0, off + i, off + j]); if (withBottom) faces.push([1, off + j, off + i]); }
+    return mkShape(verts, faces, [0, (yt + yb) / 2, 0]);
+  }
+  const SH_TREE = bipyr(5, 2.5, 2.3, 4.3, 6.7, true), SH_CONE = bipyr(5, 2.3, 0, 0, 8, false);
+  const SH_ROCK = bipyr(5, [1.4, 1.0, 1.3, 1.1, 1.25], 0, 0.5, 1.25, true), SH_BUSH = bipyr(5, 1.15, 0, 0.5, 1.5, true);
+  const VP = new Float32Array(24), TP = new Float32Array(3), shCache = new Map();
+  function shadeHex(hex, sh) {
+    const key = hex + sh; let c = shCache.get(key);
+    if (!c) { const n = parseInt(hex.slice(1), 16); c = 'rgb(' + Math.min(255, Math.round((n >> 16 & 255) * sh)) + ',' + Math.min(255, Math.round((n >> 8 & 255) * sh)) + ',' + Math.min(255, Math.round((n & 255) * sh)) + ')'; shCache.set(key, c); }
+    return c;
+  }
+  function render3d() {
+    raf3 = 0;
+    if (!mode3d || !cur) return;
+    // résolution du canvas 3D : carré 1280 en vignette ; en plein écran il remplit tout l'écran (format de l'écran) mais avec beaucoup moins de pixels (640 de large)
+    {
+      const c3el = $('cv3'), full3 = $('box').classList.contains('full');
+      const tw = full3 ? 640 : 1280, th = full3 ? clamp(Math.round(640 * c3el.clientHeight / Math.max(1, c3el.clientWidth)), 360, 1400) : 1280;
+      if (c3el.width !== tw || c3el.height !== th) { c3el.width = tw; c3el.height = th; }
+    }
+    if (!mesh3d || mesh3d.res !== cur || mesh3d.season !== pSeason) mesh3d = { res: cur, season: pSeason };
+    // maillage grossier pendant le geste (fluide), maillage fin au repos (net)
+    const qk = moving3 ? 'coarse' : 'fine';
+    if (!mesh3d[qk]) mesh3d[qk] = buildMesh(cur, qk === 'fine' ? clamp(Math.round(2 * cur.half / 0.85), 120, 240) : clamp(Math.round(2 * cur.half / 1.6), 72, 128));
+    const m = mesh3d[qk], { G, n, VX, VY, VZ, cstr, skip, needG, vstr, pr } = m, grad = !moving3;
+    const cv = $('cv3'), ctx = cv.getContext('2d'), W = cv.width, HH = cv.height, FOCAL = W * FOCAL_K;
+    const span = 2 * m.half, D = cam.dist * span, cp = Math.cos(cam.pitch), sp = Math.sin(cam.pitch);
+    const ty = 3 * EX3, Cx = D * cp * Math.sin(cam.yaw), Cy = ty + D * sp, Cz = D * cp * Math.cos(cam.yaw);
+    let fx = -Cx, fy = ty - Cy, fz = -Cz; const fl = Math.hypot(fx, fy, fz); fx /= fl; fy /= fl; fz /= fl;
+    let rx = -fz, rz = fx; const rl = Math.hypot(rx, rz); rx /= rl; rz /= rl;
+    const ux = -rz * fy, uy = rz * fx - rx * fz, uz = rx * fy;
+    const proj = (x, y, z, out, o) => {
+      const dx = x - Cx, dy = y - Cy, dz = z - Cz;
+      const zc = dx * fx + dy * fy + dz * fz;
+      out[o + 2] = zc;
+      const k = FOCAL / (zc > 0.01 ? zc : 0.01);
+      out[o] = W / 2 + (dx * rx + dz * rz) * k;
+      out[o + 1] = HH / 2 - (dx * ux + dy * uy + dz * uz) * k;
+    };
+    // ciel et océan (dégradé calé sur la distance au sol, brume vers l'horizon)
+    const drawProp3 = (q, by, x0, y0, sc) => {
+      const s = q.s || 1, bx = q.x, bz = q.z, ang = q.a || 0, ca = Math.cos(ang), sa = Math.sin(ang), hex = treeColor(q);
+      const rock = q.k === 'boulder', cone = CONIFER.has(q.k), bush = SMALLP.has(q.k);
+      const lum = (pSeason === 2 && !rock) ? 1.18 : 1;   // arbres d'été un peu plus clairs en 3D
+      const shp = rock ? SH_ROCK : cone ? SH_CONE : bush ? SH_BUSH : SH_TREE;
+      if (!rock && !cone && !bush) {   // tronc : un simple trait
+        proj(bx, by + 3.4 * s, bz, TP, 0);
+        ctx.strokeStyle = '#6b4a2f'; ctx.lineWidth = Math.max(0.8, 0.9 * sc);
+        ctx.beginPath(); ctx.moveTo(x0, y0); ctx.lineTo(TP[0], TP[1]); ctx.stroke();
+      }
+      const vx = Cx - bx, vy = Cy - (by + shp.yc * s), vz = Cz - bz, V = shp.V, N = shp.N, F = shp.F;
+      for (let i = 0; i < shp.nv; i++) { const lx = V[i * 3], lz = V[i * 3 + 2]; proj(bx + (lx * ca - lz * sa) * s, by + V[i * 3 + 1] * s, bz + (lx * sa + lz * ca) * s, VP, i * 3); }
+      ctx.lineWidth = 0.6;
+      for (let f = 0; f < F.length; f++) {
+        const n0 = N[f * 3], ny = N[f * 3 + 1], n2 = N[f * 3 + 2], nx = n0 * ca - n2 * sa, nz = n0 * sa + n2 * ca;
+        if (nx * vx + ny * vy + nz * vz <= 0) continue;   // face tournée dos à la caméra
+        const c = shadeHex(hex, Math.round((0.8 + 0.3 * Math.max(0, nx * SUN[0] + ny * SUN[1] + nz * SUN[2])) * lum * 12) / 12);
+        ctx.fillStyle = c; ctx.strokeStyle = c;
+        const fi = F[f]; ctx.beginPath(); ctx.moveTo(VP[fi[0] * 3], VP[fi[0] * 3 + 1]);
+        for (let j = 1; j < fi.length; j++) ctx.lineTo(VP[fi[j] * 3], VP[fi[j] * 3 + 1]);
+        ctx.closePath(); ctx.fill(); ctx.stroke();
+      }
+      ctx.lineWidth = 0.8;
+    };
+    const yh = HH / 2 - FOCAL * Math.tan(cam.pitch);
+    ctx.clearRect(0, 0, W, HH);
+    const skyH = clamp(yh, 0, HH);
+    if (skyH > 0) {
+      const gs = ctx.createLinearGradient(0, 0, 0, skyH);
+      gs.addColorStop(0, rgb3(SKY_TOP)); gs.addColorStop(1, rgb3(HAZE));
+      ctx.fillStyle = gs; ctx.fillRect(0, 0, W, skyH);
+    }
+    if (skyH < HH) {
+      // sol infini : en paysage terrestre, la couleur du terrain au niveau du monde se prolonge jusqu'à l'horizon (plan à la hauteur du monde) ; sinon océan
+      const landG = !!cur.land;
+      let deep = deepWater(), gy = 0;
+      if (landG) {
+        const hh = cur.worldH - (WL - 0.07), gt = [0, 0, 0];
+        plainGreen(gt);
+        deep = gt; gy = (Math.max(hh, 0.07) - 0.07) * EX3;
+      }
+      const go = ctx.createLinearGradient(0, skyH, 0, HH);
+      for (let k = 0; k <= 12; k++) {
+        const u = Math.pow(k / 12, 1.8), y = skyH + (HH - skyH) * u;
+        const beta = cam.pitch + Math.atan((y - HH / 2) / FOCAL);
+        const fog = beta <= 0.003 ? 1 : clamp(((Cy - gy) / Math.tan(beta) - (D * cp + 1.45 * m.half)) / (3 * D), 0, 1);
+        go.addColorStop(u, rgb3(mix3(deep, HAZE, Math.pow(fog, 0.8))));
+      }
+      ctx.fillStyle = go; ctx.fillRect(0, skyH, W, HH - skyH);
+      ctx.fillStyle = rgb3(mix3(deep, HAZE, 1)); ctx.fillRect(0, skyH - 0.5, W, 1.5);
+      // reflet du soleil sur l'océan de fond : petit tampon calculé par pixel (basse résolution), étiré en lissé
+      if (!landG) {
+        const qs = moving3 ? 12 : 7, qw = Math.ceil(W / qs), y0 = Math.max(0, Math.floor(skyH)), qh = Math.ceil((HH - y0) / qs);
+        const gc = glintCv || (glintCv = document.createElement('canvas')), gctx = gc.getContext('2d');
+        gc.width = qw; gc.height = qh;
+        const gimg = gctx.createImageData(qw, qh), gd = gimg.data; let any = false;
+        for (let qy = 0; qy < qh; qy++) {
+          const bb = -(y0 + (qy + 0.5) * qs - HH / 2) / FOCAL;
+          for (let qx = 0; qx < qw; qx++) {
+            const aa = ((qx + 0.5) * qs - W / 2) / FOCAL;
+            let dx = fx + aa * rx + bb * ux, dy = fy + bb * uy, dz = fz + aa * rz + bb * uz;
+            if (dy > -0.002) continue;
+            const l = Math.hypot(dx, dy, dz); dx /= l; dy /= l; dz /= l;
+            const tt = -Cy / dy, g = glint(Cx + tt * dx, Cz + tt * dz, dx, dy, dz);
+            if (g > 0.02) { const o = (qy * qw + qx) * 4; gd[o] = 255; gd[o + 1] = 243; gd[o + 2] = 214; gd[o + 3] = g * 85; any = true; }
+          }
+        }
+        if (any) { gctx.putImageData(gimg, 0, 0); ctx.imageSmoothingEnabled = true; ctx.drawImage(gc, 0, 0, qw, qh, 0, y0, qw * qs, qh * qs); }
+      }
+    }
+    // sommets projetés
+    const P = new Float32Array(n * n * 3);
+    for (let k = 0; k < n * n; k++) proj(VX[k], VY[k], VZ[k], P, k * 3);
+    const cells = G * G, showVeg = $('optVeg').checked, np = showVeg ? pr.length : 0;
+    const keys = new Float32Array(cells + np), ids = new Int32Array(cells + np), PP = new Float32Array(np * 3);
+    let cnt = 0;
+    for (let i = 0; i < G; i++) for (let j = 0; j < G; j++) {
+      const ci = i * G + j; if (skip[ci]) continue;
+      const a = (i * n + j) * 3, b = a + 3, c = a + n * 3, d = c + 3;
+      const z0 = P[a + 2], z1 = P[b + 2], z2 = P[c + 2], z3 = P[d + 2];
+      if (z0 < 2 || z1 < 2 || z2 < 2 || z3 < 2) continue;
+      keys[ci] = (z0 + z1 + z2 + z3) / 4; ids[cnt++] = ci;
+    }
+    const bias = m.step * 0.35;
+    for (let k = 0; k < np; k++) {
+      proj(pr[k].q.x, pr[k].y, pr[k].q.z, PP, k * 3);
+      if (PP[k * 3 + 2] < 2) continue;
+      keys[cells + k] = PP[k * 3 + 2] - bias; ids[cnt++] = cells + k;
+    }
+    const order = ids.subarray(0, cnt);
+    order.sort((a, b) => keys[b] - keys[a]);
+    ctx.lineJoin = 'round'; ctx.lineWidth = 0.8;
+    for (let t = 0; t < cnt; t++) {
+      const id = order[t];
+      if (id < cells) {
+        const i = (id / G) | 0, j = id - i * G, ia = i * n + j, a = ia * 3, b = a + 3, c = a + n * 3, d = c + 3;
+        let col = cstr[id];
+        if (grad && needG[id]) {
+          col = ctx.createLinearGradient(P[a], P[a + 1], P[d], P[d + 1]);
+          col.addColorStop(0, vstr[ia]); col.addColorStop(1, vstr[ia + n + 1]);
+        }
+        ctx.fillStyle = col; ctx.strokeStyle = col;
+        ctx.beginPath(); ctx.moveTo(P[a], P[a + 1]); ctx.lineTo(P[b], P[b + 1]); ctx.lineTo(P[d], P[d + 1]); ctx.lineTo(P[c], P[c + 1]); ctx.closePath();
+        ctx.fill(); ctx.stroke();
+        const wc = (VY[ia] === 0) + (VY[ia + 1] === 0) + (VY[ia + n] === 0) + (VY[ia + n + 1] === 0);
+        if (wc > 0) {   // maille avec de l'eau, même partielle (le reflet s'atténue vers la rive : pas de contour sombre autour des îles)
+          const gx = VX[ia] + m.step * 0.5 - Cx, gy = -Cy, gz = VZ[ia] + m.step * 0.5 - Cz, gl = 1 / Math.hypot(gx, gy, gz);
+          const gi = glint(gx + Cx, gz + Cz, gx * gl, gy * gl, gz * gl);
+          if (gi > 0.03) {   // on éclaircit la couleur de l'eau vers un blanc chaud (même tracé opaque : pas de joints visibles)
+            const k = gi * 0.08 * wc; let c2;
+            if (grad && needG[id]) { c2 = ctx.createLinearGradient(P[a], P[a + 1], P[d], P[d + 1]); c2.addColorStop(0, warm(vstr[ia], k)); c2.addColorStop(1, warm(vstr[ia + n + 1], k)); }
+            else c2 = warm(cstr[id], k);
+            ctx.fillStyle = c2; ctx.strokeStyle = c2; ctx.fill(); ctx.stroke();
+          }
+        }
+      } else {
+        const k = id - cells, o = k * 3, q = pr[k].q, sc = FOCAL / PP[o + 2] * (q.s || 1);
+        if (sc < 0.3) continue;
+        const x0 = PP[o], y0 = PP[o + 1];
+        drawProp3(q, pr[k].y, x0, y0, sc);   // toujours de vrais volumes 3D (plus de sprites plats)
+      }
+    }
+  }
+  const queue3 = () => { if (!raf3) raf3 = requestAnimationFrame(render3d); };
+  // Transition 2D ⇄ 3D : le plan s'incline. Vue 2D = caméra quasi à la verticale (nord en haut), vue 3D = inclinaison de repos.
+  const TOP = { pitch: 1.45, dist: 1.25 };   // presque à la verticale (pas exactement : le vecteur droite serait indéfini)
+  let zoomTok3 = 0, rest3 = { pitch: CAM0.pitch, dist: 1.1 };
+  const ease3 = u => u < 0.5 ? 4 * u * u * u : 1 - Math.pow(-2 * u + 2, 3) / 2;
+  function tilt3(to, T, done) {
+    const tok = ++zoomTok3, p0 = cam.pitch, d0 = cam.dist, t0 = performance.now();
+    const step = now => {
+      if (tok !== zoomTok3) return;
+      const u = Math.min(1, (now - t0) / T), e = ease3(u);
+      cam.pitch = p0 + (to.pitch - p0) * e; cam.dist = d0 + (to.dist - d0) * e; bump3();
+      if (u < 1) requestAnimationFrame(step); else if (done) done();
+    };
+    requestAnimationFrame(step);
+  }
+  function set3d(on) {
+    $('opt3d').setAttribute('aria-pressed', String(on));
+    if (on) {
+      mode3d = true; cam.yaw = 0;   // la carte garde l'orientation de la vue 2D (nord en haut)
+      cam.pitch = TOP.pitch; cam.dist = TOP.dist;
+      $('cv').hidden = true; $('cv3').hidden = false;
+      queue3(); tilt3(rest3, 800);
+    } else {
+      if (!mode3d) return;
+      rest3 = { pitch: cam.pitch, dist: cam.dist };
+      tilt3(TOP, 650, () => { mode3d = false; $('cv').hidden = false; $('cv3').hidden = true; });
+    }
+  }
+  $('opt3d').addEventListener('click', () => set3d(!mode3d));
+  (function () {
+    const c3 = $('cv3'), pts = new Map();
+    let pinch3 = null, mv3 = 0, moved3 = false;
+    c3.addEventListener('pointerdown', e => {
+      c3.setPointerCapture(e.pointerId); pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      mv3 = 0; moved3 = false;
+      if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch3 = { d: Math.hypot(a.x - b.x, a.y - b.y) || 1, dist: cam.dist }; moved3 = true; }
+    });
+    c3.addEventListener('pointermove', e => {
+      const q = pts.get(e.pointerId); if (!q) return;
+      const dx = e.clientX - q.x, dy = e.clientY - q.y; q.x = e.clientX; q.y = e.clientY;
+      if (pts.size === 2 && pinch3) {
+        const [a, b] = [...pts.values()];
+        cam.dist = clamp(pinch3.dist * pinch3.d / (Math.hypot(a.x - b.x, a.y - b.y) || 1), 0.45, 3);
+      } else if (pts.size === 1) {
+        mv3 += Math.hypot(dx, dy); if (mv3 > 5) moved3 = true;
+        cam.yaw -= dx * 0.008; cam.pitch = clamp(cam.pitch + dy * 0.004, 0.1, 1.0);
+      }
+      bump3();
+    });
+    const end3 = e => { pts.delete(e.pointerId); if (pts.size < 2) pinch3 = null; };
+    c3.addEventListener('pointerup', end3); c3.addEventListener('pointercancel', end3);
+    c3.addEventListener('wheel', e => { e.preventDefault(); cam.dist = clamp(cam.dist * Math.exp(e.deltaY * 0.001), 0.45, 3); bump3(); }, { passive: false });
+    c3.addEventListener('click', () => { if (moved3) { moved3 = false; return; } toggleFull(); });
+  })();
+
+  /* ---------- exécution ---------- */
+  let runId = 0, saving = false, timer = null, toastT = null;
+  const toast = msg => {
+    const t = $('toast'); t.textContent = msg; t.hidden = false;
+    clearTimeout(toastT); toastT = setTimeout(() => { t.hidden = true; }, 4200);
+  };
+  const setProg = (p, label) => { $('barfill').style.width = Math.round(p * 100) + '%'; $('busyLabel').textContent = t(label); };
+  async function run() {
+    clearTimeout(timer);
+    const id = ++runId;
+    $('busy').hidden = false; setProg(0.02, 'Préparation');
+    try {
+      const prm = getParams();
+      const res = await generate(prm, (p, l) => { if (id === runId) setProg(p, l); }, () => id !== runId);
+      if (id !== runId) return;
+      propInfo = { counts: propCounts(res), mult: { leaf: prm.leaf, pine: prm.pine, bush: prm.bush, flower: prm.flower, rock: prm.rock } };
+      syncSliders();
+      cur = res; cur.json = null;
+      base = renderBase(res);
+      applyView();   // le zoom et la position sont conservés à chaque génération
+      paint();
+      if (mode3d) queue3();
+      $('stats').textContent = statsText(res);
+    } catch (e) {
+      if (e && e.message === 'cancelled') return;
+      toast(e && e.message ? e.message : t('La génération a échoué.'));
+    } finally {
+      if (id === runId) $('busy').hidden = true;
+    }
+  }
+  function autoRun() { clearTimeout(timer); timer = setTimeout(run, 250); }
+
+  // aperçu : le bouton de gauche fait défiler les quatre saisons (sans changer la saison enregistrée)
+  const savedSeason = () => Number($('season').value) || 2;
+  function setPreviewSeason(n) {
+    pSeason = n; winter = n === 4;
+    const chip = document.querySelector('#seasonBtns .chip[data-s="' + n + '"]');
+    const btn = $('optWinter');
+    btn.querySelector('svg').innerHTML = chip.querySelector('svg').innerHTML;
+    btn.setAttribute('aria-label', chip.getAttribute('aria-label')); btn.title = chip.getAttribute('aria-label');
+    btn.setAttribute('aria-pressed', String(n !== savedSeason()));
+    if (cur) { base = renderBase(cur); paint(); }
+    if (mode3d) queue3();
+  }
+  $('optWinter').addEventListener('click', () => setPreviewSeason(pSeason % 4 + 1));
+  $('dice').addEventListener('click', () => { $('seed').value = 1 + Math.floor(Math.random() * 999999); view.k = 1; view.x = view.y = 0; applyView(); resetCam(); run(); });
+  $('seed').addEventListener('change', autoRun);
+  const syncSeason = () => document.querySelectorAll('#seasonBtns .chip').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.s === String(Number($('season').value) || 2))));
+  syncSeason();
+  setPreviewSeason(savedSeason());
+  document.querySelectorAll('#seasonBtns .chip').forEach(b => b.addEventListener('click', () => {
+    $('season').value = b.dataset.s; syncSeason(); persist(); if (cur) cur.json = null;
+    setPreviewSeason(Number(b.dataset.s));
+  }));
+  $('mapname').addEventListener('change', () => { persist(); if (cur) cur.json = null; });
+  /* ---------- zoom / déplacement de la carte ---------- */
+  const view = { k: 1, x: 0, y: 0 };
+  const ZMAX = 8;
+  function applyView() {
+    const box = $('box'), cv = $('cv');
+    const w = cv.clientWidth, h = cv.clientHeight;
+    view.k = clamp(view.k, 1, ZMAX);
+    view.x = clamp(view.x, w * (1 - view.k), 0);
+    view.y = clamp(view.y, h * (1 - view.k), 0);
+    cv.style.transform = view.k === 1 ? '' : 'translate(' + view.x + 'px,' + view.y + 'px) scale(' + view.k + ')';
+    box.classList.toggle('zoomed', view.k > 1.001);
+  }
+  // zoom autour d'un point (px, py) exprimé dans le repère du canvas affiché (non transformé)
+  function zoomAt(px, py, nk) {
+    nk = clamp(nk, 1, ZMAX);
+    const r = nk / view.k;
+    view.x = px - (px - view.x) * r;
+    view.y = py - (py - view.y) * r;
+    view.k = nk;
+    applyView();
+  }
+  function localPt(e) {
+    const cv = $('cv'), b = cv.getBoundingClientRect();
+    // b est la boîte transformée : on ramène au repère non transformé
+    return { x: (e.clientX - b.left) / view.k, y: (e.clientY - b.top) / view.k };
+  }
+  const boxEl = $('box');
+  boxEl.addEventListener('wheel', e => {
+    if (mode3d) return;
+    e.preventDefault();
+    const p = localPt(e);
+    zoomAt(p.x, p.y, view.k * Math.exp(-e.deltaY * 0.0015));
+  }, { passive: false });
+  const ptrs = new Map();
+  let drag = null, pinch = null, moved = false;
+  boxEl.addEventListener('pointerdown', e => {
+    if (mode3d || e.target.closest('.busy')) return;
+    boxEl.setPointerCapture(e.pointerId);
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    moved = false;
+    if (ptrs.size === 1) drag = { x: e.clientX, y: e.clientY, vx: view.x, vy: view.y };
+    if (ptrs.size === 2) {
+      const [a, b] = [...ptrs.values()];
+      pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), k: view.k };
+      drag = null; moved = true;
+    }
+  });
+  boxEl.addEventListener('pointermove', e => {
+    if (!ptrs.has(e.pointerId)) return;
+    ptrs.set(e.pointerId, { x: e.clientX, y: e.clientY });
+    if (ptrs.size === 2 && pinch) {
+      const [a, b] = [...ptrs.values()];
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      const p = localPt({ clientX: (a.x + b.x) / 2, clientY: (a.y + b.y) / 2 });
+      zoomAt(p.x, p.y, pinch.k * d / pinch.d);
+    } else if (drag && ptrs.size === 1) {
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!moved && Math.hypot(dx, dy) > 5) moved = true;
+      if (moved && view.k > 1) { view.x = drag.vx + dx; view.y = drag.vy + dy; applyView(); }
+    }
+  });
+  const endPtr = e => {
+    ptrs.delete(e.pointerId);
+    if (ptrs.size < 2) pinch = null;
+    if (ptrs.size === 1) { const [q] = ptrs.values(); drag = { x: q.x, y: q.y, vx: view.x, vy: view.y }; moved = true; }
+    if (ptrs.size === 0) drag = null;
+  };
+  boxEl.addEventListener('pointerup', endPtr);
+  boxEl.addEventListener('pointercancel', endPtr);
+  const zoomBtn = f => () => { if (mode3d) { cam.dist = clamp(cam.dist / f, 0.45, 3); queue3(); return; } const c = $('cv'); zoomAt(c.clientWidth / 2, c.clientHeight / 2, view.k * f); };
+  $('zoomIn').addEventListener('click', zoomBtn(1.6));
+  $('zoomOut').addEventListener('click', zoomBtn(1 / 1.6));
+  window.addEventListener('resize', applyView);
+
+  const toggleFull = () => { const f = $('box').classList.toggle('full'); $('stick').classList.toggle('is-full', f); document.body.classList.toggle('is-full', f); $('langMenu').hidden = true; $('expand').setAttribute('aria-pressed', String(f)); view.k = 1; view.x = view.y = 0; applyView(); paint(); if (mode3d) queue3();
+    try {   // vrai plein écran du navigateur quand il est disponible (sinon le plein écran CSS suffit)
+      if (f) { if (document.documentElement.requestFullscreen && !document.fullscreenElement) { const pr = document.documentElement.requestFullscreen({ navigationUI: 'hide' }); if (pr && pr.catch) pr.catch(() => { }); } }
+      else if (document.fullscreenElement) { const pr = document.exitFullscreen(); if (pr && pr.catch) pr.catch(() => { }); }
+    } catch (e) { }
+  };
+  document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && $('box').classList.contains('full')) toggleFull(); });
+  window.addEventListener('resize', () => { if (mode3d) queue3(); });
+  $('cv').addEventListener('click', () => { if (moved) { moved = false; return; } if (view.k > 1.001) return; toggleFull(); });
+  $('expand').addEventListener('click', toggleFull);
+  ['optVeg'].forEach(id => {
+    const el = $(id);
+    Object.defineProperty(el, 'checked', { get: () => el.getAttribute('aria-pressed') === 'true' });
+    el.addEventListener('click', () => {
+      el.setAttribute('aria-pressed', String(!el.checked));
+      if (id === 'optVeg') { paint(); if (mode3d) queue3(); } else if (el.checked) autoRun();
+    });
+  });
+
+  // enregistrement : API Claude si présente, sinon téléchargement classique (Chrome, Firefox…), sinon partage système, sinon presse-papiers
+  async function saveBlob(blob, fname, text) {
+    // 1) capacité « downloads » de la page publiée (confirmation côté viewer)
+    let dl = null;
+    try { dl = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) { dl = null; }
+    if (dl) {
+      try { await dl.save({ filename: fname, data: blob }); return 'saved'; }
+      catch (e) {
+        if (e && e.code === 'declined') return 'declined';
+        /* autre erreur : on essaie les solutions de secours */
+      }
+    }
+    // 2) lien de téléchargement classique : inerte dans une page intégrée (iframe), donc seulement hors iframe
+    let framed = false;
+    try { framed = window.self !== window.top; } catch (e) { framed = true; }
+    if (!framed) {
+      try {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url; a.download = fname; a.rel = 'noopener'; a.style.display = 'none';
+        document.body.appendChild(a); a.click();
+        setTimeout(() => { a.remove(); URL.revokeObjectURL(url); }, 60000);
+        return 'saved';
+      } catch (e) { /* on essaie la suite */ }
+    }
+    // 3) partage système (mobile)
+    try {
+      const file = new File([blob], fname, { type: blob.type });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ files: [file], title: fname }); return 'saved'; }
+    } catch (e) { if (e && e.name === 'AbortError') return 'declined'; }
+    // 4) presse-papiers
+    try { if (text && navigator.clipboard) { await navigator.clipboard.writeText(text); return 'copied'; } } catch (e) { /* rien */ }
+    return 'none';
+  }
+  $('dlImg').addEventListener('click', async () => {
+    if (!cur || !base) { toast(t('Aucune image à enregistrer.')); return; }
+    try {
+      const blob = await new Promise(r => (mode3d ? $('cv3') : $('cv')).toBlob(r, 'image/png'));
+      const fname = cur.name.replace(/[^\w\-]+/g, '_') + '_' + cur.seed + '.png';
+      const r = blob ? await saveBlob(blob, fname) : 'none';
+      if (r === 'saved') toast(t('Image enregistrée : {0}', fname));
+      else if (r === 'declined') toast(t('Enregistrement annulé.'));
+      else toast(t('Enregistrement indisponible dans cette vue.'));
+    } catch (e) {
+      if (e && e.code === 'declined') toast(t('Enregistrement annulé.'));
+      else toast((e && e.message) || t("L'enregistrement a échoué."));
+    }
+  });
+
+  async function getJSON() {
+    const p = getParams();
+    if (!cur || cur.seed !== p.seed || cur.name !== p.name || cur.season !== p.season) await run();
+    if (!cur) throw new Error(t('Aucune carte à enregistrer.'));
+    if (!cur.json) {
+      $('busy').hidden = false;
+      try {
+        cur.json = await buildJSON(cur, f => setProg(f, 'Compression des chunks'));
+      } finally { $('busy').hidden = true; }
+    }
+    return cur;
+  }
+  // générateur de nom de carte : 2 à 4 syllabes prononçables (consonne + voyelle), parfois une finale
+  const rndName = () => {
+    const C = 'bdfgklmnprstvz', V = 'aeiou', E = ['n', 'r', 'l', 's', 'th', 'nd', 'rn'], pick = s => s[Math.floor(Math.random() * s.length)];
+    let s = '', n = 2 + Math.floor(Math.random() * 3);
+    for (let i = 0; i < n; i++) s += pick(C) + pick(V);
+    if (Math.random() < 0.45) s += pick(E);
+    return s.charAt(0).toUpperCase() + s.slice(1);
+  };
+  // fenêtre « Nom de la carte » à l'export : nom aléatoire proposé par défaut, modifiable ; renvoie le nom choisi ou null si annulé
+  function askName() {
+    return new Promise(resolve => {
+      const m = $('nameModal'), inp = $('nameInput');
+      inp.value = rndName(); m.hidden = false;
+      setTimeout(() => { inp.focus(); inp.select(); }, 50);
+      const done = v => {
+        m.hidden = true;
+        $('nameOk').removeEventListener('click', ok); $('nameCancel').removeEventListener('click', no);
+        $('nameDice').removeEventListener('click', dice); m.removeEventListener('click', bg); inp.removeEventListener('keydown', key);
+        resolve(v);
+      };
+      const ok = () => done((inp.value || '').trim() || rndName()), no = () => done(null);
+      const dice = () => { inp.value = rndName(); inp.focus(); inp.select(); };
+      const bg = e => { if (e.target === m) no(); };
+      const key = e => { if (e.key === 'Enter') { e.preventDefault(); ok(); } else if (e.key === 'Escape') no(); };
+      $('nameOk').addEventListener('click', ok); $('nameCancel').addEventListener('click', no);
+      $('nameDice').addEventListener('click', dice); m.addEventListener('click', bg); inp.addEventListener('keydown', key);
+    });
+  }
+  $('save').addEventListener('click', async () => {
+    if (saving) return;
+    saving = true; $('save').disabled = true;
+    try {
+      const nm = await askName();
+      if (nm === null) { toast(t('Enregistrement annulé.')); return; }
+      $('mapname').value = nm; persist();   // le nom choisi devient le nom de la carte (champ « Nom de la carte » et champ name du JSON)
+      if (cur) { cur.name = nm; cur.json = null; }
+      const res = await getJSON();
+      const fname = res.name.replace(/[^\w\-]+/g, '_') + '_' + res.seed + '.json';
+      const blob = new Blob([res.json.text], { type: 'application/json' });
+      const r = await saveBlob(blob, fname, res.json.text);
+      if (r === 'saved') toast(t('Carte enregistrée : {0}', fname));
+      else if (r === 'declined') toast(t('Enregistrement annulé.'));
+      else if (r === 'copied') toast(t('Enregistrement indisponible ici : JSON copié dans le presse-papiers.'));
+      else toast(t('Enregistrement indisponible dans cette vue.'));
+    } catch (e) {
+      if (e && e.code === 'declined') toast(t('Enregistrement annulé.'));
+      else toast((e && e.message) || t("L'enregistrement a échoué."));
+    } finally { saving = false; $('save').disabled = false; }
+  });
+
+  /* ---------- bouton « Télécharger le jeu » : Google Play sur Android, App Store sur iPhone/iPad ---------- */
+  // À REMPLACER par les vrais liens des fiches du jeu.
+  const STORE_LINKS = {
+    android: 'https://play.google.com/store/search?q=Kalecik&c=apps',
+    ios: 'https://apps.apple.com/search?term=Kalecik'
+  };
+  const detectOS = () => {
+    const ua = navigator.userAgent || '';
+    if (/android/i.test(ua)) return 'android';
+    if (/iPhone|iPad|iPod/i.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)) return 'ios';
+    return null;
+  };
+  const OS = detectOS();
+  (function () {
+    if (!OS) return;   // ni Android ni iOS : bouton masqué
+    const a = $('getGame');
+    a.href = STORE_LINKS[OS]; a.hidden = false; a.classList.toggle('ios', OS === 'ios');
+    document.querySelector('.dock-in').classList.add('two');
+  })();
+
+  function applyLang() {
+    document.querySelectorAll('[data-t]').forEach(el => { if (!el.dataset.fr) el.dataset.fr = el.textContent; el.textContent = t(el.dataset.fr); });
+    [['rand', 'Aléatoire', 'Aléatoire'], ['dice', 'Au hasard', 'Au hasard'], ['zoomIn', 'Zoom avant', 'Zoom +'], ['zoomOut', 'Zoom arrière', 'Zoom −'], ['optVeg', 'Afficher la végétation', 'Végétation'], ['expand', 'Plein écran', 'Plein écran'], ['dlImg', "Enregistrer l'image", "Enregistrer l'image"]]
+      .forEach(([id, a, ti]) => { const e = $(id); e.setAttribute('aria-label', t(a)); e.title = t(ti); });
+    $('langBtn').setAttribute('aria-label', t('Réglages'));
+    { const pre = { fr: 'Télécharger sur ', en: 'Get it on ', tr: 'İndir: ', es: 'Descargar en ', de: 'Laden bei ' }[lang] || 'Télécharger sur ';
+      const g = $('getGame'), lb = pre + (OS === 'ios' ? 'App Store' : 'Google Play'); g.setAttribute('aria-label', lb); g.title = lb; }
+    if (typeof applyMode === 'function') { applyMode(); }
+    $('langMenu').querySelectorAll('.langopt').forEach(b => b.setAttribute('aria-current', String(b.dataset.c ? b.dataset.c === lang : b.dataset.u === unitPref)));
+  }
+  function setLang(c) {
+    lang = c; document.documentElement.lang = c;
+    applyLang(); syncSliders(); persist();
+    if (cur) { $('stats').textContent = statsText(cur); paint(); }
+  }
+  function setUnit(u) {
+    unitPref = u; persist(); applyLang(); syncSliders();
+    if (cur) { $('stats').textContent = statsText(cur); paint(); }
+  }
+  (function () {
+    const lm = $('langMenu');
+    const head = txt => { const h = document.createElement('div'); h.className = 'setting-h'; h.setAttribute('data-t', ''); h.textContent = txt; lm.appendChild(h); };
+    head('Langue');
+    LANGS.forEach(([c, n]) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'langopt'; b.innerHTML = flagEl(c) + '<span>' + n + '</span>'; b.dataset.c = c;
+      b.addEventListener('click', () => setLang(c));
+      lm.appendChild(b);
+    });
+    lm.appendChild(document.createElement('hr'));
+    head('Unité de mesure');
+    [['auto', 'Automatique'], ['m', 'Mètres (m)'], ['ft', 'Pieds (ft)']].forEach(([u, n]) => {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'langopt'; b.dataset.u = u;
+      b.innerHTML = '<span data-t>' + n + '</span>';
+      b.addEventListener('click', () => setUnit(u));
+      lm.appendChild(b);
+    });
+    lm.addEventListener('click', e => e.stopPropagation());
+    $('langBtn').addEventListener('click', e => { e.stopPropagation(); lm.hidden = !lm.hidden; });
+    document.addEventListener('click', () => { lm.hidden = true; });
+  })();
+  /* ---------- menu « Monde » : hauteur du monde infini (base_h) ; au-dessus de l'eau → paysage terrestre ---------- */
+  const isLand = () => vals.worldH > WL + 0.01;
+  const waterDefaults = () => !isLand() ? { lakes: 0, rivers: 0 } : vals.worldH === 0.5 ? { lakes: 3, rivers: 0 } : vals.worldH === 1 ? { lakes: 1, rivers: 1 } : vals.worldH === 10 ? { lakes: 1, rivers: 0 } : vals.worldH === 6 ? { lakes: 0, rivers: 2 } : { lakes: 2, rivers: 1 };
+  const ROW_ISLAND_ONLY = new Set(['gap', 'coast', 'flatCoast', 'bigSize', 'smallSize', 'small']);
+  const ROW_ALT = { big: 'Massifs' };
+  const ROW_MODE = { fissures: [6], fissureWidth: [6], crevasses: [6], canyons: [10], canyonDepth: [10] };   // Plateau : fissures et crevasses ; Hautes terres : canyons
+  function applyMode() {
+    const land = isLand();
+    DEFS.concat(ADV).forEach(d => {
+      const row = $('s-' + d.id).closest('.row');
+      row.hidden = (land && ROW_ISLAND_ONLY.has(d.id)) || (!!ROW_MODE[d.id] && !(land && ROW_MODE[d.id].includes(vals.worldH)));
+      if (ROW_ALT[d.id]) { const sp = row.querySelector('.lt span'); sp.dataset.fr = land ? ROW_ALT[d.id] : d.label; sp.textContent = t(sp.dataset.fr); }
+    });
+    const tb = tabBtns['Archipel']; tb.dataset.fr = land ? 'Paysage' : 'Archipel'; tb.textContent = t(tb.dataset.fr);
+    document.querySelectorAll('#modeBtns .mode').forEach(b => b.setAttribute('aria-pressed', String(Number(b.dataset.h) === vals.worldH)));
+  }
+  document.querySelectorAll('#modeBtns .mode').forEach(b => b.addEventListener('click', () => {
+    const h = Number(b.dataset.h);
+    if (h === vals.worldH) return;
+    const was = isLand(), prevH = vals.worldH;
+    vals.worldH = h;
+    { const WW = { 0.5: 1.7, 1: 1.7, 6: 1.8, 10: 1.7 }; vals.waterWidth = WW[h] || DEFVALS.waterWidth; }   // Rivage, Plateau et Hautes terres : rivières et lacs plus larges par défaut
+    if (isLand() !== was || h === 0.5 || prevH === 0.5 || h === 1 || prevH === 1 || h === 10 || prevH === 10 || h === 6 || prevH === 6) { const w = waterDefaults(); vals.lakes = w.lakes; vals.rivers = w.rivers; }   // valeurs par défaut du nouveau mode : 1 rivière + 2 lacs en paysage terrestre ; Rivage : 3 rivières + 1 lac (le terrain y crée déjà beaucoup de cuvettes naturelles)
+    if (h === 10) vals.canyons = 3; else if (prevH === 10) vals.canyons = DEFVALS.canyons;   // Hautes terres : canyons par défaut
+    syncSliders(); persist(); run();
+  }));
+  document.documentElement.lang = lang;
+  applyLang();
+  run();   // démarrage direct en mode archipel (worldH = -6)
+})();
+</script>
+
+<script>if('serviceWorker' in navigator && location.protocol.startsWith('http')) addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));</script>
+</body></html>
